@@ -54,6 +54,7 @@ export default function Dashboard() {
   const [summary, setSummary] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const navigate = useNavigate();
+  const [typedText, setTypedText] = useState("");
 
   useEffect(() => {
     async function fetchAll() {
@@ -72,6 +73,21 @@ export default function Dashboard() {
     }
     fetchAll();
   }, []);
+
+  useEffect(() => {
+    if (!loaded || !user?.username) return;
+    const greetings = ["WELCOME BACK", "LET'S GET TO WORK", "TIME TO TRAIN", "STAY THE COURSE", "NO DAYS OFF"];
+    const chosen = greetings[Math.floor(Math.random() * greetings.length)];
+    const target = `${chosen}, ${user.username.toUpperCase()}`;
+    let i = 0;
+    setTypedText("");
+    const interval = setInterval(() => {
+      i++;
+      setTypedText(target.slice(0, i));
+      if (i >= target.length) clearInterval(interval);
+    }, 50);
+    return () => clearInterval(interval);
+  }, [loaded, user?.username]);
 
   if (!loaded) return <DashboardSkeleton />;
 
@@ -108,7 +124,18 @@ export default function Dashboard() {
               textTransform: "uppercase",
             }}
           >
-            {user?.username || "USER"}
+            {typedText}
+            <span
+              style={{
+                display: "inline-block",
+                width: "1px",
+                height: "11px",
+                background: "var(--color-accent)",
+                marginLeft: "2px",
+                verticalAlign: "middle",
+                opacity: typedText.length === (`WELCOME BACK, ${user?.username?.toUpperCase()}`).length ? 0 : 1,
+              }}
+            />
           </span>
           <span
             style={{
