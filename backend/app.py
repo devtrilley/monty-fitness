@@ -42,9 +42,10 @@ app = Flask(__name__)
 
 # Configuration
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-    "DATABASE_URI", "sqlite:///monty_fitness.db"
-)
+db_url = os.getenv("DATABASE_URL", "sqlite:///monty_fitness.db")
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "dev-jwt-secret")
 # Production Tokens
@@ -54,13 +55,14 @@ app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "dev-jwt-secret")
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=4)  # 4 hours instead of 15 min
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)  # 30 days instead of 7
 app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
-app.config["JWT_COOKIE_SECURE"] = False  # Set True in production
+app.config["JWT_COOKIE_SECURE"] = False  # Set True in productionapp.config["JWT_COOKIE_SECURE"] = os.getenv("FLASK_ENV") == "production"
 app.config["JWT_COOKIE_CSRF_PROTECT"] = False
 app.config["JWT_COOKIE_SAMESITE"] = "Lax"
 
 # Initialize extensions
 db.init_app(app)
-CORS(app, origins=["http://localhost:5173"], supports_credentials=True)
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+CORS(app, origins=allowed_origins, supports_credentials=True)
 jwt = JWTManager(app)
 
 
