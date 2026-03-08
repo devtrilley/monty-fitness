@@ -52,11 +52,26 @@ export default function RestTimerModal({
               onSelectRest(seconds);
               onClose();
             }}
-            className={`w-full py-3 rounded-lg text-center font-medium transition-colors ${
+            className="w-full py-3 text-center font-bold transition-all active:scale-[0.99]"
+            style={
               currentRest === seconds
-                ? "bg-accent text-white"
-                : "bg-surface-raised text-text hover:bg-border"
-            }`}
+                ? {
+                    background: "var(--color-accent)",
+                    color: "#000",
+                    border: "1px solid var(--color-accent-80)",
+                    clipPath:
+                      "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+                    fontFamily: "monospace",
+                    letterSpacing: "0.1em",
+                  }
+                : {
+                    background: "var(--color-surface-raised)",
+                    color: "var(--color-text)",
+                    border: "1px solid var(--color-border)",
+                    clipPath:
+                      "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+                  }
+            }
           >
             {formatRestTime(seconds)}
           </button>
@@ -66,7 +81,15 @@ export default function RestTimerModal({
       <div className="px-6">
         <button
           onClick={onClose}
-          className="w-full py-3 bg-accent hover:bg-accent-hover text-white font-medium rounded-xl transition-colors"
+          className="w-full py-3 font-bold uppercase tracking-[0.2em] text-sm transition-all active:scale-[0.98]"
+          style={{
+            background: "var(--color-accent)",
+            color: "#000",
+            border: "1px solid var(--color-accent-80)",
+            clipPath:
+              "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+            fontFamily: "monospace",
+          }}
         >
           Done
         </button>

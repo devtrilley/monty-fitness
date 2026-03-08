@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { register } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
+import ChamferButton from "../components/ChamferButton";
 
 export default function Register() {
   const [username, setUsername] = useState("");
@@ -34,12 +35,16 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-bg flex flex-col">
       {/* App Bar */}
-      <div className="bg-surface border-b border-border px-6 py-4">
+      <div className="px-6 py-4" style={{ background: "var(--color-bg)", borderBottom: "1px solid var(--color-border)" }}>
         <div className="max-w-md mx-auto flex items-center gap-2">
-          <div className="w-7 h-7 bg-accent rounded-md flex items-center justify-center">
+          <div className="w-7 h-7 rounded-md flex items-center justify-center"
+            style={{ background: "var(--color-accent)", boxShadow: "0 0 10px var(--color-accent-60)" }}>
             <span className="text-white font-bold text-sm">M</span>
           </div>
-          <span className="text-lg font-bold text-text tracking-widest uppercase">Monty</span>
+          <span className="text-lg font-bold tracking-[0.2em] uppercase"
+            style={{ color: "var(--color-accent)", textShadow: "0 0 12px var(--color-accent-60)" }}>
+            Monty
+          </span>
         </div>
       </div>
 
@@ -97,13 +102,9 @@ export default function Register() {
               />
             </div>
 
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="w-full mt-2 py-3.5 bg-accent hover:bg-accent-hover active:scale-[0.98] text-white text-base font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <ChamferButton onClick={handleSubmit} disabled={loading} className="mt-2">
               {loading ? "Creating account..." : "Sign Up"}
-            </button>
+            </ChamferButton>
           </div>
 
           <div className="mt-8 text-center">

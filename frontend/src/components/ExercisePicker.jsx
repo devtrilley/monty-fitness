@@ -227,13 +227,32 @@ export default function ExercisePicker({
                       }
                     }}
                     disabled={isAlreadyAdded}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl text-left transition-colors border ${
+                    className="w-full flex items-center justify-between p-3 text-left transition-all active:scale-[0.99]"
+                    style={
                       isAlreadyAdded
-                        ? "bg-surface-raised opacity-40 cursor-not-allowed border-border"
+                        ? {
+                            background: "var(--color-surface-raised)",
+                            border: "1px solid var(--color-border)",
+                            clipPath:
+                              "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+                            opacity: 0.4,
+                            cursor: "not-allowed",
+                          }
                         : isSelected
-                        ? "bg-accent-subtle border-accent"
-                        : "bg-surface hover:bg-surface-raised border-border"
-                    }`}
+                        ? {
+                            background: "var(--color-accent-subtle)",
+                            border: "1px solid var(--color-accent-35)",
+                            clipPath:
+                              "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+                            boxShadow: "0 0 10px var(--color-accent-25)",
+                          }
+                        : {
+                            background: "var(--color-surface)",
+                            border: "1px solid var(--color-border)",
+                            clipPath:
+                              "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+                          }
+                    }
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <ExerciseImage
@@ -256,11 +275,19 @@ export default function ExercisePicker({
                     </div>
                     {multiSelect ? (
                       <div
-                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                        className="w-6 h-6 flex items-center justify-center flex-shrink-0"
+                        style={{ borderRadius: "3px" }}
+                        style={
                           isSelected
-                            ? "bg-accent border-accent"
-                            : "border-border"
-                        }`}
+                            ? {
+                                background: "var(--color-accent)",
+                                border: "2px solid var(--color-accent)",
+                                boxShadow: "0 0 8px var(--color-accent-60)",
+                              }
+                            : {
+                                border: "2px solid var(--color-border)",
+                              }
+                        }
                       >
                         {isSelected && (
                           <svg
@@ -301,7 +328,15 @@ export default function ExercisePicker({
             <button
               onClick={handleConfirm}
               disabled={selected.length === 0}
-              className="w-full py-3.5 bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full py-3.5 font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed tracking-[0.2em] uppercase text-sm active:scale-[0.98]"
+              style={{
+                background: "var(--color-accent)",
+                color: "#000",
+                border: "1px solid var(--color-accent-80)",
+                clipPath:
+                  "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+                fontFamily: "monospace",
+              }}
             >
               {selected.length === 0
                 ? "Select exercises"

@@ -78,7 +78,14 @@ export default function ViewRoutine() {
               toast.error("Failed to start workout");
             }
           }}
-          className="w-full py-3 bg-accent hover:bg-accent-hover active:scale-[0.98] text-white font-semibold rounded-xl transition-colors mb-8"
+          className="w-full py-3 active:scale-[0.98] font-bold text-sm tracking-[0.2em] uppercase transition-all mb-8"
+          style={{
+            background: "var(--color-accent)",
+            color: "#000",
+            border: "1px solid var(--color-accent-80)",
+            clipPath: "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+            fontFamily: "monospace",
+          }}
         >
           Start Routine
         </button>
@@ -95,11 +102,15 @@ export default function ViewRoutine() {
           {(routine.exercises || []).map((ex, idx) => (
             <div
               key={idx}
-              className="bg-surface rounded-xl border border-border overflow-hidden"
+              className="overflow-hidden"
+            style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", clipPath: "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)" }}
             >
               <div className="p-4 border-b border-border">
-              <div className="flex items-center gap-3">
-                  <ExerciseImage imageUrl={ex.exercise?.image_url} name={ex.exercise?.name} />
+                <div className="flex items-center gap-3">
+                  <ExerciseImage
+                    imageUrl={ex.exercise?.image_url}
+                    name={ex.exercise?.name}
+                  />
                   <div>
                     <h4 className="font-semibold text-text">
                       {ex.exercise?.name}

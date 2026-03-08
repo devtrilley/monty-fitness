@@ -9,12 +9,10 @@ export default function BaseModal({
 }) {
   useEffect(() => {
     if (!isOpen) return;
-
-    const prevOverflow = document.body.style.overflow;
+    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
     return () => {
-      document.body.style.overflow = prevOverflow;
+      document.body.style.overflow = prev;
     };
   }, [isOpen]);
 
@@ -22,23 +20,49 @@ export default function BaseModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 flex items-end justify-center z-[999]"
+      className="fixed inset-0 flex items-end justify-center z-[999] fade-in"
+      style={{ background: "rgba(0,0,0,0.88)" }}
       onClick={onClose}
     >
       <div
-        className="bg-surface w-full max-w-lg rounded-t-2xl border-t border-border"
+        className="w-full max-w-lg modal-slide-up"
+        style={{
+          background: "var(--color-surface)",
+          borderTop: "1px solid var(--color-border-bright)",
+          borderLeft: "1px solid var(--color-border)",
+          borderRight: "1px solid var(--color-border)",
+          clipPath:
+            "polygon(12px 0%, calc(100% - 12px) 0%, 100% 12px, 100% 100%, 0% 100%, 0% 12px)",
+          boxShadow:
+            "0 -8px 48px rgba(0,0,0,0.95), 0 -1px 0 var(--color-accent-20)",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
-          <div className="px-6 pt-6 pb-3 border-b border-border flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-text">{title}</h3>
+          <div
+            className="px-6 pt-6 pb-3 flex items-center justify-between"
+            style={{ borderBottom: "1px solid var(--color-border)" }}
+          >
+            <h3
+              className="text-sm font-bold uppercase tracking-[0.2em]"
+              style={{ color: "var(--color-text)", fontFamily: "monospace" }}
+            >
+              {title}
+            </h3>
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="text-muted hover:text-text transition-colors"
+                className="transition-colors"
+                style={{ color: "var(--color-muted)" }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = "var(--color-accent)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = "var(--color-muted)")
+                }
               >
                 <svg
-                  className="w-6 h-6"
+                  className="w-5 h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"

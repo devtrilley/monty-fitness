@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getWorkoutSession, finishWorkout, discardWorkout } from "../utils/api";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
+import TronToaster from "../components/TronToaster";
 import { getSetLabel } from "../utils/setHelpers";
 import ExercisePicker from "../components/ExercisePicker";
 import ExerciseImage from "../components/ExerciseImage";
@@ -52,7 +53,8 @@ export default function ActiveWorkout() {
 
   const getAudioCtx = () => {
     if (!audioCtxRef.current) {
-      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      audioCtxRef.current = new (window.AudioContext ||
+        window.webkitAudioContext)();
     }
     return audioCtxRef.current;
   };
@@ -75,7 +77,10 @@ export default function ActiveWorkout() {
       oscillator.frequency.value = 800;
       oscillator.type = "sine";
       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.01,
+        audioContext.currentTime + 0.5
+      );
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.5);
     } catch {}
@@ -313,7 +318,7 @@ export default function ActiveWorkout() {
 
   return (
     <div className="min-h-screen bg-bg pb-24">
-      <Toaster position="top-center" />
+      <TronToaster />
 
       {/* Sticky Header + Stats */}
       <div className="bg-surface sticky top-0 z-10 border-b border-border shadow-lg">
@@ -328,7 +333,15 @@ export default function ActiveWorkout() {
           <h1 className="text-lg font-semibold text-text">Active Workout</h1>
           <button
             onClick={() => setShowDiscardConfirm(true)}
-            className="px-4 py-2 bg-danger hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
+            className="px-4 py-2 text-white text-sm font-bold uppercase tracking-[0.15em] transition-all active:scale-[0.97]"
+            style={{
+              background: "rgba(239,68,68,0.15)",
+              border: "1px solid var(--color-danger)",
+              color: "var(--color-danger)",
+              clipPath:
+                "polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px)",
+              fontFamily: "monospace",
+            }}
           >
             Discard
           </button>
@@ -486,35 +499,69 @@ export default function ActiveWorkout() {
       {/* Exercises */}
       <div className="px-6 py-6 space-y-6">
         {session.exercises.length === 0 && (
-          <div className="bg-surface border border-border rounded-xl p-8 text-center">
+          <div
+            className="p-8 text-center"
+            style={{
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              clipPath:
+                "polygon(12px 0%, 100% 0%, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0% 100%, 0% 12px)",
+            }}
+          >
             <div className="text-4xl mb-3">🏋️</div>
-            <p className="text-xl font-semibold text-text mb-1">Get started</p>
-            <p className="text-sm text-muted mb-6">
+            <p
+              className="text-xl font-bold text-text mb-1"
+              style={{ fontFamily: "monospace", letterSpacing: "0.05em" }}
+            >
+              GET STARTED
+            </p>
+            <p className="text-sm mb-6" style={{ color: "var(--color-muted)" }}>
               Add an exercise to start your workout
             </p>
-
             <button
               onClick={() => {
                 setIsAddingExercise(true);
                 setShowExercisePicker(true);
               }}
-              className="w-full py-4 bg-accent hover:bg-accent-hover active:scale-[0.98] text-white font-semibold rounded-xl transition-all"
+              className="w-full py-4 text-white font-bold uppercase tracking-[0.2em] text-sm active:scale-[0.98] transition-all mb-4"
+              style={{
+                background: "var(--color-accent)",
+                color: "#000",
+                clipPath:
+                  "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+                fontFamily: "monospace",
+              }}
             >
               + Add Exercise
             </button>
-
-            <div className="flex gap-3 mt-4">
+            <div className="flex gap-3">
               <button
                 onClick={handleTimeEdit}
-                className="flex-1 py-3 bg-surface-raised border border-border text-text font-medium rounded-xl hover:bg-surface transition-colors"
+                className="flex-1 py-3 text-sm font-bold uppercase tracking-[0.15em] transition-all active:scale-[0.98]"
+                style={{
+                  background: "transparent",
+                  border: "1px solid var(--color-border)",
+                  color: "var(--color-muted)",
+                  clipPath:
+                    "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+                  fontFamily: "monospace",
+                }}
               >
                 Settings
               </button>
               <button
                 onClick={() => setShowDiscardConfirm(true)}
-                className="flex-1 py-3 bg-surface-raised border border-border text-danger font-medium rounded-xl hover:bg-surface transition-colors"
+                className="flex-1 py-3 text-sm font-bold uppercase tracking-[0.15em] transition-all active:scale-[0.98]"
+                style={{
+                  background: "rgba(239,68,68,0.08)",
+                  border: "1px solid rgba(239,68,68,0.4)",
+                  color: "var(--color-danger)",
+                  clipPath:
+                    "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+                  fontFamily: "monospace",
+                }}
               >
-                Discard Workout
+                Discard
               </button>
             </div>
           </div>
@@ -525,12 +572,21 @@ export default function ActiveWorkout() {
           return (
             <div
               key={ex.id}
-              className="bg-surface rounded-xl border border-border p-4"
+              className="p-4"
+              style={{
+                background: "var(--color-surface)",
+                border: "1px solid var(--color-border)",
+                clipPath:
+                  "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+              }}
             >
               <div className="mb-2">
                 <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <ExerciseImage imageUrl={ex.exercise?.image_url} name={ex.exercise?.name} />
+                  <div className="flex items-center gap-3">
+                    <ExerciseImage
+                      imageUrl={ex.exercise?.image_url}
+                      name={ex.exercise?.name}
+                    />
                     <h3 className="font-semibold text-text">
                       {ex.exercise.name}
                       <span className="text-xs font-normal text-muted ml-1">
@@ -646,13 +702,17 @@ export default function ActiveWorkout() {
                         showWeight
                           ? "grid-cols-[35px_64px_62px_62px_42px]"
                           : "grid-cols-[35px_62px_62px_42px]"
-                      } gap-1.5 items-center rounded-md -mx-4 px-4 py-1 transition-colors ${
-                        isCompleted
-                          ? "bg-green-900/40"
+                      } gap-1.5 items-center rounded-md -mx-4 px-4 py-1 transition-colors`}
+                      style={{
+                        background: isCompleted
+                          ? "rgba(34,197,94,0.12)"
                           : setIdx % 2 === 0
-                          ? "bg-surface-raised"
-                          : "bg-surface"
-                      }`}
+                          ? "var(--color-surface-raised)"
+                          : "var(--color-surface)",
+                        borderLeft: isCompleted
+                          ? "2px solid var(--color-success)"
+                          : "none",
+                      }}
                     >
                       <button
                         onClick={() => {
@@ -660,19 +720,36 @@ export default function ActiveWorkout() {
                           setShowSetTypeModal(true);
                         }}
                         disabled={isCompleted}
-                        className={`font-medium text-center h-9 w-9 rounded-lg transition-colors ${
-                          set.set_type === "warmup"
-                            ? "bg-yellow-900/40 text-yellow-400"
-                            : set.set_type === "failure"
-                            ? "bg-red-900/40 text-red-400"
-                            : set.set_type === "drop"
-                            ? "bg-blue-900/40 text-blue-400"
-                            : "bg-surface-raised text-text"
-                        } ${
+                        className={`font-medium text-center h-9 w-9 rounded-lg transition-all ${
                           isCompleted
                             ? "opacity-50 cursor-not-allowed"
                             : "hover:opacity-80"
                         }`}
+                        style={
+                          set.set_type === "warmup"
+                            ? {
+                                background: "rgba(234,179,8,0.15)",
+                                color: "#facc15",
+                                border: "1px solid rgba(234,179,8,0.3)",
+                              }
+                            : set.set_type === "failure"
+                            ? {
+                                background: "var(--color-accent-subtle)",
+                                color: "var(--color-accent)",
+                                border: "1px solid var(--color-accent-30)",
+                                boxShadow: "0 0 6px var(--color-accent-30)",
+                              }
+                            : set.set_type === "drop"
+                            ? {
+                                background: "rgba(59,130,246,0.15)",
+                                color: "#60a5fa",
+                                border: "1px solid rgba(59,130,246,0.3)",
+                              }
+                            : {
+                                background: "var(--color-surface-raised)",
+                                color: "var(--color-text)",
+                              }
+                        }
                       >
                         {getSetLabel(ex.sets, setIdx)}
                       </button>
@@ -755,11 +832,20 @@ export default function ActiveWorkout() {
                             ex.rest_seconds || 120
                           )
                         }
-                        className={`h-9 w-9 rounded-lg border-2 flex items-center justify-center transition-colors ${
+                        className="h-9 w-9 rounded-lg flex items-center justify-center transition-all"
+                        style={
                           isCompleted
-                            ? "bg-accent border-accent text-white"
-                            : "border-border hover:border-accent text-muted"
-                        }`}
+                            ? {
+                                background: "var(--color-accent)",
+                                border: "2px solid var(--color-accent)",
+                                color: "#fff",
+                                boxShadow: "0 0 8px var(--color-accent-60)",
+                              }
+                            : {
+                                border: "2px solid var(--color-border)",
+                                color: "var(--color-muted)",
+                              }
+                        }
                       >
                         {isCompleted && "✓"}
                       </button>
@@ -795,7 +881,15 @@ export default function ActiveWorkout() {
             setIsAddingExercise(true);
             setShowExercisePicker(true);
           }}
-          className="w-full py-3 mt-2 text-accent font-medium border-2 border-dashed border-accent/40 rounded-xl hover:bg-accent-subtle transition-colors"
+          className="w-full py-3 mt-2 font-bold text-sm uppercase tracking-[0.2em] transition-all active:scale-[0.98]"
+          style={{
+            background: "var(--color-accent-subtle)",
+            border: "1px solid var(--color-accent-35)",
+            color: "var(--color-accent)",
+            clipPath:
+              "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+            fontFamily: "monospace",
+          }}
         >
           + Add Exercise
         </button>
@@ -805,7 +899,15 @@ export default function ActiveWorkout() {
       <div className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border p-4 pb-safe">
         <button
           onClick={handleFinish}
-          className="w-full py-3 bg-accent hover:bg-accent-hover active:scale-[0.98] text-white font-medium rounded-xl transition-colors"
+          className="w-full py-3 active:scale-[0.98] font-bold tracking-[0.2em] uppercase text-sm transition-all"
+          style={{
+            background: "var(--color-accent)",
+            color: "#000",
+            border: "1px solid var(--color-accent-80)",
+            clipPath:
+              "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+            fontFamily: "monospace",
+          }}
         >
           Finish Workout
         </button>
@@ -925,11 +1027,23 @@ export default function ActiveWorkout() {
         cancelText="Keep Going"
         confirmText="Finish Anyway"
       >
-        <div className="bg-orange-900/20 border border-orange-700/40 rounded-xl p-4 mb-4 text-center">
-          <p className="text-4xl font-bold text-orange-400 mb-1">
+        <div
+          className="rounded-xl p-4 mb-4 text-center"
+          style={{
+            background: "rgba(245,158,11,0.1)",
+            border: "1px solid rgba(245,158,11,0.3)",
+          }}
+        >
+          <p
+            className="text-4xl font-bold mb-1"
+            style={{ color: "var(--color-warning)" }}
+          >
             {challengeRepsShort}
           </p>
-          <p className="text-sm font-medium text-orange-300">
+          <p
+            className="text-sm font-medium"
+            style={{ color: "var(--color-warning)" }}
+          >
             rep{challengeRepsShort !== 1 ? "s" : ""} still needed
           </p>
         </div>

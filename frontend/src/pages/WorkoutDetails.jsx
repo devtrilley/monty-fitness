@@ -35,10 +35,19 @@ export default function WorkoutDetails() {
           {workout.exercises.map((ex) => (
             <div
               key={ex.id}
-              className="bg-surface rounded-xl border border-border p-4"
+              className="p-4"
+              style={{
+                background: "var(--color-surface)",
+                border: "1px solid var(--color-border)",
+                clipPath:
+                  "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+              }}
             >
               <div className="flex items-center gap-3 mb-3">
-                <ExerciseImage imageUrl={ex.exercise?.image_url} name={ex.exercise?.name} />
+                <ExerciseImage
+                  imageUrl={ex.exercise?.image_url}
+                  name={ex.exercise?.name}
+                />
                 <h2 className="font-semibold text-text">
                   {ex.exercise.name}
                   <span className="text-xs font-normal text-muted ml-2">
@@ -67,7 +76,13 @@ export default function WorkoutDetails() {
                         {set.pr_type.split(",").map((type) => (
                           <span
                             key={type}
-                            className="text-xs font-medium text-amber-400 bg-amber-900/30 border border-amber-700/50 rounded px-1.5 py-0.5"
+                            className="text-xs font-medium rounded px-1.5 py-0.5"
+                            style={{
+                              color: "var(--color-accent)",
+                              background: "var(--color-accent-subtle)",
+                              border: "1px solid var(--color-accent-40)",
+                              textShadow: "0 0 6px var(--color-accent-60)",
+                            }}
                           >
                             🏆{" "}
                             {type === "volume"

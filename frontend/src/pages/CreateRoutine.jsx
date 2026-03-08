@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createRoutine } from "../utils/api";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
+import TronToaster from "../components/TronToaster";
 import ExercisePicker from "../components/ExercisePicker";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getSetLabel } from "../utils/setHelpers";
@@ -92,7 +93,7 @@ export default function CreateRoutine() {
 
   return (
     <div className="min-h-screen bg-bg">
-      <Toaster position="top-center" />
+      <TronToaster />
       <TopBar title="Create Routine" />
       <div className="px-6 py-6 pb-32">
         <div className="mb-6">
@@ -155,7 +156,13 @@ export default function CreateRoutine() {
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
-                                className="bg-surface p-4 rounded-xl border border-border mb-4"
+                                className="p-4 mb-4"
+                                style={{
+                                  background: "var(--color-surface)",
+                                  border: "1px solid var(--color-border)",
+                                  clipPath:
+                                    "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+                                }}
                               >
                                 <div className="flex items-center justify-between gap-4 mb-4">
                                   <span
@@ -266,15 +273,40 @@ export default function CreateRoutine() {
                                           ];
                                         setSelectedExercises(u);
                                       }}
-                                      className={`h-9 rounded-lg font-medium text-sm ${
+                                      className="h-9 rounded-lg font-medium text-sm"
+                                      style={
                                         set.type === "warmup"
-                                          ? "bg-yellow-900/40 text-yellow-400"
+                                          ? {
+                                              background:
+                                                "rgba(234,179,8,0.15)",
+                                              color: "#facc15",
+                                              border:
+                                                "1px solid rgba(234,179,8,0.3)",
+                                            }
                                           : set.type === "failure"
-                                          ? "bg-red-900/40 text-red-400"
+                                          ? {
+                                              background:
+                                                "var(--color-accent-subtle)",
+                                              color: "var(--color-accent)",
+                                              border:
+                                                "1px solid var(--color-accent-30)",
+                                              boxShadow:
+                                                "0 0 6px var(--color-accent-30)",
+                                            }
                                           : set.type === "drop"
-                                          ? "bg-blue-900/40 text-blue-400"
-                                          : "bg-surface-raised text-text"
-                                      }`}
+                                          ? {
+                                              background:
+                                                "rgba(59,130,246,0.15)",
+                                              color: "#60a5fa",
+                                              border:
+                                                "1px solid rgba(59,130,246,0.3)",
+                                            }
+                                          : {
+                                              background:
+                                                "var(--color-surface-raised)",
+                                              color: "var(--color-text)",
+                                            }
+                                      }
                                     >
                                       {getSetLabel(ex.sets, setIndex)}
                                     </button>
@@ -357,7 +389,15 @@ export default function CreateRoutine() {
           )}
           <button
             onClick={() => setShowExercisePicker(true)}
-            className="w-full py-3 bg-accent hover:bg-accent-hover text-white font-medium rounded-xl transition-colors"
+            className="w-full py-3 font-bold transition-all tracking-[0.2em] uppercase text-sm active:scale-[0.98]"
+            style={{
+              background: "var(--color-accent)",
+              color: "#000",
+              border: "1px solid var(--color-accent-80)",
+              clipPath:
+                "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+              fontFamily: "monospace",
+            }}
           >
             + Add Exercise
           </button>
@@ -373,14 +413,30 @@ export default function CreateRoutine() {
             localStorage.removeItem("routine_exercises");
             navigate("/workouts");
           }}
-          className="flex-1 py-3.5 bg-surface border border-border text-muted font-semibold rounded-xl hover:bg-surface-raised transition-colors"
+          className="flex-1 py-3.5 font-bold uppercase tracking-[0.15em] text-sm transition-all active:scale-[0.98]"
+          style={{
+            background: "transparent",
+            border: "1px solid var(--color-border)",
+            color: "var(--color-muted)",
+            clipPath:
+              "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+            fontFamily: "monospace",
+          }}
         >
           Cancel
         </button>
         <button
           onClick={handleSave}
           disabled={loading}
-          className="flex-1 py-3.5 bg-success hover:bg-green-600 active:bg-green-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 py-3.5 font-bold uppercase tracking-[0.15em] text-sm transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{
+            background: "var(--color-success)",
+            color: "#000",
+            border: "1px solid var(--color-success)",
+            clipPath:
+              "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+            fontFamily: "monospace",
+          }}
         >
           {loading ? "Saving..." : "Save Routine"}
         </button>

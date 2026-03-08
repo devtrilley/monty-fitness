@@ -97,8 +97,19 @@ export default function Analytics() {
       <TopBar title="Analytics" onRefresh={fetchAnalytics} />
       <div className="px-6 py-6 space-y-4">
         {/* This Week */}
-        <div className="bg-surface rounded-xl border border-border p-4">
-          <h2 className="text-xs font-semibold text-muted uppercase tracking-wide mb-3">
+        <div
+          className="p-4"
+          style={{
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+            clipPath:
+              "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+          }}
+        >
+          <h2
+            className="text-xs font-bold text-muted uppercase tracking-[0.2em] mb-3"
+            style={{ fontFamily: "monospace" }}
+          >
             This Week
           </h2>
           <div className="grid grid-cols-2 gap-4">
@@ -122,8 +133,19 @@ export default function Analytics() {
         </div>
 
         {/* Streaks */}
-        <div className="bg-surface rounded-xl border border-border p-4">
-          <h2 className="text-xs font-semibold text-muted uppercase tracking-wide mb-3">
+        <div
+          className="p-4"
+          style={{
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+            clipPath:
+              "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+          }}
+        >
+          <h2
+            className="text-xs font-bold text-muted uppercase tracking-[0.2em] mb-3"
+            style={{ fontFamily: "monospace" }}
+          >
             Progress
           </h2>
           <div className="space-y-2">
@@ -152,7 +174,17 @@ export default function Analytics() {
               </span>
             </div>
             {summary.badge && (
-              <div className="mt-2 inline-flex items-center gap-2 bg-accent-subtle border border-accent/20 px-3 py-1.5 rounded-lg">
+              <div
+                className="mt-2 inline-flex items-center gap-2 px-3 py-1.5"
+                style={{
+                  clipPath:
+                    "polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px)",
+                }}
+                style={{
+                  background: "var(--color-accent-subtle)",
+                  border: "1px solid var(--color-accent-20)",
+                }}
+              >
                 <span>🏅</span>
                 <span className="text-sm font-medium text-accent">
                   {summary.badge}
@@ -163,15 +195,36 @@ export default function Analytics() {
         </div>
 
         {/* Volume Chart */}
-        <div className="bg-surface rounded-xl border border-border p-4">
+        <div
+          className="p-4"
+          style={{
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+            clipPath:
+              "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+          }}
+        >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-semibold text-muted uppercase tracking-wide">
+            <h2
+              className="text-xs font-bold text-muted uppercase tracking-[0.2em]"
+              style={{ fontFamily: "monospace" }}
+            >
               Volume Trends
             </h2>
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              className="text-sm border border-border bg-surface-raised text-text rounded-lg px-3 py-1 focus:outline-none focus:ring-1 focus:ring-accent"
+              className="text-sm px-3 py-1"
+              style={{
+                background: "var(--color-surface-raised)",
+                border: "1px solid var(--color-border)",
+                color: "var(--color-text)",
+                clipPath:
+                  "polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px)",
+                fontFamily: "monospace",
+                fontSize: "11px",
+                letterSpacing: "0.1em",
+              }}
             >
               <option value="3months">Last 3 Months</option>
               <option value="1year">Last Year</option>
@@ -182,8 +235,19 @@ export default function Analytics() {
         </div>
 
         {/* PRs */}
-        <div className="bg-surface rounded-xl border border-border p-4">
-          <h2 className="text-xs font-semibold text-muted uppercase tracking-wide mb-3">
+        <div
+          className="p-4"
+          style={{
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+            clipPath:
+              "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+          }}
+        >
+          <h2
+            className="text-xs font-bold text-muted uppercase tracking-[0.2em] mb-3"
+            style={{ fontFamily: "monospace" }}
+          >
             Personal Records
           </h2>
           <div className="space-y-3">

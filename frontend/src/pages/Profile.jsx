@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { updateProfile, getWorkoutHistory } from "../utils/api";
 import WorkoutHistoryCard from "../components/WorkoutHistoryCard";
 import TopBar from "../components/TopBar";
+import ChamferButton from "../components/ChamferButton";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -44,8 +45,19 @@ export default function Profile() {
       <TopBar title="Profile" />
       <div className="px-6 py-6 space-y-4">
         {/* Avatar + Info */}
-        <div className="bg-surface rounded-xl border border-border p-5 flex items-center gap-4">
-          <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
+        <div
+          className="p-5 flex items-center gap-4"
+          style={{
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+            clipPath:
+              "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+          }}
+        >
+          <div
+            className="w-16 h-16 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0"
+            style={{ borderRadius: "4px", background: "var(--color-accent)", boxShadow: "0 0 16px var(--color-accent-60)" }}
+          >
             {user?.username?.charAt(0).toUpperCase()}
           </div>
           <div>
@@ -55,7 +67,15 @@ export default function Profile() {
         </div>
 
         {/* Bio */}
-        <div className="bg-surface rounded-xl border border-border p-5">
+        <div
+          className="p-5"
+          style={{
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+            clipPath:
+              "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+          }}
+        >
           <label className="block text-sm font-medium text-muted mb-2">
             Bio
           </label>
@@ -74,27 +94,49 @@ export default function Profile() {
               Failed to update profile.
             </p>
           )}
-          <button
+          <ChamferButton
             onClick={handleSave}
             disabled={saving}
-            className="w-full mt-3 py-2.5 bg-accent hover:bg-accent-hover text-white font-medium rounded-lg disabled:opacity-50 transition-all active:scale-[0.98]"
+            size="sm"
+            className="mt-3"
           >
             {saving ? "Saving..." : "Save Changes"}
-          </button>
+          </ChamferButton>
         </div>
 
         {/* Quick Links */}
-        <div className="bg-surface rounded-xl border border-border overflow-hidden">
+        <div
+          style={{
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+            clipPath:
+              "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+            overflow: "hidden",
+          }}
+        >
           <button
             onClick={() => navigate("/analytics")}
-            className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-surface-raised border-b border-border transition-colors"
+            className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors"
+            style={{ borderBottom: "1px solid var(--color-border)" }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "var(--color-surface-raised)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "transparent")
+            }
           >
             <span className="font-medium text-text">📊 Analytics</span>
             <span className="text-muted">›</span>
           </button>
           <button
             onClick={() => navigate("/challenges")}
-            className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-surface-raised transition-colors"
+            className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors"
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "var(--color-surface-raised)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "transparent")
+            }
           >
             <span className="font-medium text-text">🏆 Challenges</span>
             <span className="text-muted">›</span>
@@ -113,7 +155,15 @@ export default function Profile() {
               ))}
             </div>
           ) : (
-            <div className="bg-surface rounded-xl border border-border p-6 text-center">
+            <div
+              className="p-6 text-center"
+              style={{
+                background: "var(--color-surface)",
+                border: "1px solid var(--color-border)",
+                clipPath:
+                  "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+              }}
+            >
               <p className="text-muted text-sm">No workouts yet</p>
             </div>
           )}
@@ -122,11 +172,18 @@ export default function Profile() {
         {/* Logout */}
         <button
           onClick={logout}
-          className="w-full py-3 border border-danger/30 text-danger font-medium rounded-xl hover:bg-red-900/20 transition-colors"
+          className="w-full py-3 font-bold uppercase tracking-[0.15em] text-sm transition-all active:scale-[0.98]"
+          style={{ fontFamily: "monospace", border: "1px solid var(--color-danger)", color: "var(--color-danger)" }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.background = "var(--color-danger)15")
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.background = "transparent")
+          }
         >
           Log Out
         </button>
       </div>
-      </div>
+    </div>
   );
 }

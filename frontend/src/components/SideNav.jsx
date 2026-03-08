@@ -8,11 +8,11 @@ export default function SideNav({ isOpen, onClose }) {
   const { logout } = useAuth();
 
   const menuItems = [
-    { label: "Dashboard", icon: <Home size={18} />, path: "/dashboard" },
-    { label: "Workouts", icon: <Dumbbell size={18} />, path: "/workouts" },
-    { label: "Analytics", icon: <BarChart3 size={18} />, path: "/analytics" },
-    { label: "Challenges", icon: <Flame size={18} />, path: "/challenges" },
-    { label: "Profile", icon: <User size={18} />, path: "/profile" },
+    { label: "Dashboard", icon: <Home size={17} />, path: "/dashboard" },
+    { label: "Workouts", icon: <Dumbbell size={17} />, path: "/workouts" },
+    { label: "Analytics", icon: <BarChart3 size={17} />, path: "/analytics" },
+    { label: "Challenges", icon: <Flame size={17} />, path: "/challenges" },
+    { label: "Profile", icon: <User size={17} />, path: "/profile" },
   ];
 
   const handleLogout = async () => {
@@ -33,54 +33,96 @@ export default function SideNav({ isOpen, onClose }) {
 
   return (
     <>
-      {/* Overlay — always mounted, opacity-controlled for smooth fade */}
       <div
         onClick={onClose}
-        className={`fixed inset-0 bg-black/70 z-[55] transition-opacity duration-300 ${
+        className={`fixed inset-0 z-[55] transition-opacity duration-300 ${
           isOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
         }`}
+        style={{ background: "rgba(0,0,0,0.85)" }}
       />
 
-      {/* Panel — slides in/out */}
       <div
-        className={`fixed left-0 top-[57px] bottom-0 bg-surface w-64 border-r border-border flex flex-col z-[60] transform transition-transform duration-300 ease-in-out ${
+        className={`fixed left-0 top-[57px] bottom-0 w-64 flex flex-col z-[60] transform transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
+        style={{
+          background: "var(--color-bg)",
+          borderRight: "1px solid #00c8ffcc",
+        }}
       >
-        <nav className="flex-1 overflow-y-auto pt-4">
-          {menuItems.map((item) => (
-            <button
-              key={item.label}
-              onClick={() => {
-                navigate(item.path);
-                onClose();
-              }}
-              className={`flex items-center w-full px-5 py-3.5 transition-colors ${
-                isActive(item.path)
-                  ? "bg-accent-subtle text-accent font-medium border-r-2 border-accent"
-                  : "text-muted hover:text-text hover:bg-surface-raised"
-              }`}
-            >
-              <span className="mr-3">{item.icon}</span>
-              {item.label}
-            </button>
-          ))}
+        {/* Logo area */}
+        <div
+          className="px-5 py-4 mb-2"
+          style={{ borderBottom: "1px solid var(--color-border)" }}
+        >
+          <p
+            className="text-xs tracking-[0.3em] uppercase font-medium glow-text"
+            style={{
+              color: "var(--color-accent)",
+              fontFamily: "monospace",
+            }}
+          >
+            MONTY FITNESS
+          </p>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto py-2">
+          {menuItems.map((item) => {
+            const active = isActive(item.path);
+            return (
+              <button
+                key={item.label}
+                onClick={() => {
+                  navigate(item.path);
+                  onClose();
+                }}
+                className="flex items-center w-full px-5 py-3.5 transition-all duration-200"
+                style={
+                  active
+                    ? {
+                        color: "var(--color-accent)",
+                        background: "var(--color-accent-subtle)",
+                        borderRight: "2px solid var(--color-accent)",
+                        borderLeft: "2px solid var(--color-accent-30)",
+                        textShadow: "0 0 8px var(--color-accent-60)",
+                      }
+                    : {
+                        color: "var(--color-muted)",
+                        borderRight: "2px solid transparent",
+                        borderLeft: "2px solid transparent",
+                      }
+                }
+              >
+                <span className="mr-3">{item.icon}</span>
+                <span className="text-sm font-medium tracking-wide">
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
         </nav>
-        <div className="border-t border-border px-5 py-4 space-y-2">
+
+        <div
+          className="px-5 py-4 space-y-3"
+          style={{ borderTop: "1px solid var(--color-border)" }}
+        >
           <Link
             to="/legal"
             onClick={onClose}
-            className="block text-xs text-muted hover:text-text transition-colors py-1"
+            className="block text-xs tracking-wide transition-colors py-1"
+            style={{ color: "var(--color-muted)" }}
           >
             Terms & Privacy
           </Link>
           <button
             onClick={handleLogout}
-            className="flex items-center w-full text-danger hover:text-red-400 transition-colors py-1 text-sm"
+            className="flex items-center w-full text-sm transition-colors py-1"
+            style={{ color: "var(--color-danger)" }}
           >
-            <LogOut size={16} className="mr-3" /> Logout
+            <LogOut size={15} className="mr-3" />
+            Logout
           </button>
         </div>
       </div>

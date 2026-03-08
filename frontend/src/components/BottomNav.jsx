@@ -25,7 +25,6 @@ export default function BottomNav() {
     const backStack = JSON.parse(sessionStorage.getItem(BACK_KEY) || "[]");
     const forwardStack = JSON.parse(sessionStorage.getItem(FWD_KEY) || "[]");
     const last = backStack[backStack.length - 1];
-
     if (flag === "back" || flag === "forward") {
       sessionStorage.removeItem(FLAG_KEY);
     } else {
@@ -35,7 +34,6 @@ export default function BottomNav() {
         sessionStorage.setItem(FWD_KEY, JSON.stringify([]));
       }
     }
-
     setCanGoBack(backStack.length > 1);
     setCanGoForward(forwardStack.length > 0);
   }, [location.pathname]);
@@ -69,52 +67,46 @@ export default function BottomNav() {
   const isActive = (path) => location.pathname === path;
 
   const navItems = [
-    {
-      path: "/dashboard",
-      label: "Home",
-      icon: <Home size={22} />,
-    },
-    {
-      path: "/workouts",
-      label: "Workouts",
-      icon: <Dumbbell size={22} />,
-    },
-    {
-      path: "/analytics",
-      label: "Analytics",
-      icon: <BarChart3 size={22} />,
-    },
-    {
-      path: "/profile",
-      label: "Profile",
-      icon: <User size={22} />,
-    },
+    { path: "/dashboard", label: "Home", icon: <Home size={20} /> },
+    { path: "/workouts", label: "Workouts", icon: <Dumbbell size={20} /> },
+    { path: "/analytics", label: "Analytics", icon: <BarChart3 size={20} /> },
+    { path: "/profile", label: "Profile", icon: <User size={20} /> },
   ];
+
+  const ArrowBtn = ({ onClick, disabled, children }) => (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="flex flex-col items-center justify-center w-10 h-10 transition-all duration-200"
+      style={{
+        color: disabled ? "var(--color-surface-raised)" : "var(--color-muted)",
+        border: `1px solid ${
+          disabled ? "var(--color-surface-raised)" : "var(--color-accent-15)"
+        }`,
+      }}
+    >
+      {children}
+    </button>
+  );
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border z-50"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      className="fixed bottom-0 left-0 right-0 z-50"
+      style={{
+        background: "var(--color-bg)",
+        borderTop: "1px solid #00c8ffcc",
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}
     >
-      <div className="flex justify-around items-center h-16 px-1">
-        {/* Back */}
-        <button
-          onClick={goBack}
-          disabled={!canGoBack}
-          aria-label="Go Back"
-          className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 ${
-            canGoBack
-              ? "text-muted hover:text-text hover:bg-surface-raised active:scale-95"
-              : "text-muted/30 cursor-not-allowed"
-          }`}
-        >
+      <div className="flex justify-around items-center h-16 px-2">
+        <ArrowBtn onClick={goBack} disabled={!canGoBack}>
           <svg
-            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
             fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="2.5"
             stroke="currentColor"
-            className="w-5 h-5"
+            strokeWidth="2.5"
+            viewBox="0 0 24 24"
           >
             <path
               strokeLinecap="round"
@@ -122,46 +114,51 @@ export default function BottomNav() {
               d="M15.75 19.5L8.25 12l7.5-7.5"
             />
           </svg>
-        </button>
+        </ArrowBtn>
 
-        {/* Nav Items */}
-        {navItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 gap-0.5 ${
-              isActive(item.path)
-                ? "text-accent bg-accent-subtle"
-                : "text-muted hover:text-text hover:bg-surface-raised active:scale-95"
-            }`}
-          >
-            <span className="flex items-center justify-center">
-              {item.icon}
-            </span>
-            <span className="text-[9px] font-medium leading-none">
-              {item.label}
-            </span>
-          </Link>
-        ))}
+        {navItems.map((item) => {
+          const active = isActive(item.path);
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className="flex flex-col items-center justify-center h-12 transition-all duration-200 gap-0.5 px-3"
+              style={
+                active
+                  ? {
+                      color: "var(--color-accent)",
+                      background: "var(--color-accent-subtle)",
+                      border: "1px solid var(--color-accent-35)",
+                      clipPath: "polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px)",
+                      minWidth: "56px",
+                    }
+                  : {
+                      color: "var(--color-muted)",
+                      border: "1px solid transparent",
+                      minWidth: "44px",
+                    }
+              }
+            >
+              <span className="flex items-center justify-center">
+                {item.icon}
+              </span>
+              {active && (
+                <span className="text-[8px] font-medium leading-none tracking-wider uppercase whitespace-nowrap">
+                  {item.label}
+                </span>
+              )}
+            </Link>
+          );
+        })}
 
-        {/* Forward */}
-        <button
-          onClick={goForward}
-          disabled={!canGoForward}
-          aria-label="Go Forward"
-          className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 ${
-            canGoForward
-              ? "text-muted hover:text-text hover:bg-surface-raised active:scale-95"
-              : "text-muted/30 cursor-not-allowed"
-          }`}
-        >
+        <ArrowBtn onClick={goForward} disabled={!canGoForward}>
           <svg
-            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
             fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="2.5"
             stroke="currentColor"
-            className="w-5 h-5"
+            strokeWidth="2.5"
+            viewBox="0 0 24 24"
           >
             <path
               strokeLinecap="round"
@@ -169,7 +166,7 @@ export default function BottomNav() {
               d="M8.25 4.5l7.5 7.5-7.5 7.5"
             />
           </svg>
-        </button>
+        </ArrowBtn>
       </div>
     </nav>
   );

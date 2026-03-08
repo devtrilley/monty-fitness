@@ -19,65 +19,60 @@ export default function WorkoutHistoryCard({ workout }) {
   return (
     <div
       onClick={() => navigate(`/workouts/history/${workout.id}`)}
-      className="bg-surface rounded-xl border border-border p-4 cursor-pointer hover:bg-surface-raised transition-colors"
+      className="cursor-pointer transition-all active:scale-[0.99]"
+      style={{
+        background: "var(--color-surface)",
+        border: "1px solid var(--color-border)",
+        clipPath: "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+      }}
     >
-      <h3 className="font-semibold text-text mb-1">{workout.name}</h3>
-      <p className="text-xs text-muted mb-3">
-        {formatFullDateTime(workout.session_date)}
-      </p>
+      {/* Header */}
+      <div className="px-4 pt-4 pb-3" style={{ borderBottom: "1px solid var(--color-border)" }}>
+        <h3 className="font-bold text-base text-text mb-1">{workout.name}</h3>
+        <p style={{ color: "var(--color-muted)", fontFamily: "monospace", fontSize: "10px", letterSpacing: "0.15em" }}>
+          {formatFullDateTime(workout.session_date)}
+        </p>
+      </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-3">
+      {/* Stats */}
+      <div className="px-4 py-3 grid grid-cols-3 gap-4" style={{ borderBottom: "1px solid var(--color-border)" }}>
         <div>
-          <p className="text-xs text-muted uppercase tracking-wide mb-0.5">
-            Time
-          </p>
-          <p className="text-sm font-semibold text-text">
-            {workout.duration_minutes || 0}min
+          <p style={{ color: "var(--color-muted)", fontFamily: "monospace", fontSize: "8px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "3px" }}>Time</p>
+          <p className="text-sm font-bold text-text">{workout.duration_minutes || 0}min</p>
+        </div>
+        <div>
+          <p style={{ color: "var(--color-muted)", fontFamily: "monospace", fontSize: "8px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "3px" }}>Volume</p>
+          <p className="text-sm font-bold text-text">
+            {workout.total_volume ? `${workout.total_volume.toLocaleString()} lbs` : "—"}
           </p>
         </div>
         <div>
-          <p className="text-xs text-muted uppercase tracking-wide mb-0.5">
-            Volume
-          </p>
-          <p className="text-sm font-semibold text-text">
-            {workout.total_volume
-              ? `${workout.total_volume.toLocaleString()} lbs`
-              : "—"}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs text-muted uppercase tracking-wide mb-0.5">
-            PRs
-          </p>
-          <p className="text-sm font-semibold text-text">
+          <p style={{ color: "var(--color-muted)", fontFamily: "monospace", fontSize: "8px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "3px" }}>PRs</p>
+          <p className="text-sm font-bold" style={{ color: workout.pr_count > 0 ? "var(--color-accent)" : "var(--color-text)" }}>
             🏆 {workout.pr_count || 0}
           </p>
         </div>
       </div>
 
-      <div className="space-y-1 border-t border-border pt-3">
-      {workout.exercises?.slice(0, 3).map((ex, idx) => (
+      {/* Exercises */}
+      <div className="px-4 py-3 space-y-2">
+        {workout.exercises?.slice(0, 3).map((ex, idx) => (
           <div key={idx} className="flex items-center gap-2 text-sm">
             {ex.exercise?.image_url ? (
-              <div className="w-7 h-7 rounded overflow-hidden flex-shrink-0 bg-surface-raised">
-                <img
-                  src={ex.exercise.image_url}
-                  alt={ex.exercise.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => { e.target.style.display = "none"; }}
-                />
+              <div className="w-7 h-7 flex-shrink-0 overflow-hidden bg-surface-raised" style={{ clipPath: "polygon(3px 0%, 100% 0%, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0% 100%, 0% 3px)" }}>
+                <img src={ex.exercise.image_url} alt={ex.exercise.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = "none"; }} />
               </div>
             ) : (
-              <span className="text-muted">•</span>
+              <span style={{ color: "var(--color-accent)" }}>—</span>
             )}
             <span className="text-text">{ex.exercise.name}</span>
-            <span className="text-muted text-xs">
+            <span style={{ color: "var(--color-muted)", fontSize: "11px" }}>
               {ex.sets.filter((s) => s.weight && s.reps).length} sets
             </span>
           </div>
         ))}
         {workout.exercises?.length > 3 && (
-          <p className="text-xs text-muted mt-1">
+          <p style={{ color: "var(--color-accent)", fontFamily: "monospace", fontSize: "10px", letterSpacing: "0.1em", marginTop: "4px" }}>
             +{workout.exercises.length - 3} more exercises
           </p>
         )}

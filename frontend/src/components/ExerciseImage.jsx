@@ -6,7 +6,13 @@ export default function ExerciseImage({ imageUrl, name, size = "md" }) {
   const sizeClass = size === "sm" ? "w-7 h-7" : "w-12 h-12";
 
   return (
-    <div className={`${sizeClass} rounded-lg overflow-hidden flex-shrink-0 bg-surface-raised flex items-center justify-center`}>
+    <div
+      className={`${sizeClass} rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center`}
+      style={{
+        background: "var(--color-surface-raised)",
+        border: "1px solid var(--color-border)",
+      }}
+    >
       {imageUrl && !failed ? (
         <img
           src={imageUrl}

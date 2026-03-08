@@ -13,6 +13,7 @@ import {
 } from "../utils/api";
 import toast from "react-hot-toast";
 import TopBar from "../components/TopBar";
+import ChamferButton from "../components/ChamferButton";
 
 function WorkoutsSkeleton() {
   return (
@@ -198,10 +199,21 @@ export default function Workouts() {
   if (loading) return <WorkoutsSkeleton />;
 
   const RoutineCard = ({ routine }) => (
-    <div className="bg-surface border border-border rounded-xl overflow-hidden">
+    <div
+      style={{
+        background: "var(--color-surface)",
+        border: "1px solid var(--color-border)",
+        clipPath:
+          "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+      }}
+    >
       <div
         onClick={() => navigate(`/workouts/${routine.id}`)}
-        className="w-full flex items-center justify-between p-4 hover:bg-surface-raised transition-colors cursor-pointer"
+        className="w-full flex items-center justify-between p-4 transition-colors cursor-pointer"
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.background = "var(--color-surface-raised)")
+        }
+        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
       >
         <div className="flex-1 min-w-0 pr-2">
           <p className="font-semibold text-text">{routine.name}</p>
@@ -246,8 +258,15 @@ export default function Workouts() {
           </button>
           {menuOpen?.type === "routine" && menuOpen?.id === routine.id && (
             <div
-              className="fixed bg-surface border border-border rounded-lg shadow-lg z-50"
-              style={{ right: "1rem", width: "11rem" }}
+              className="fixed shadow-lg z-50"
+              style={{
+                right: "1rem",
+                width: "11rem",
+                background: "var(--color-surface)",
+                border: "1px solid var(--color-border-bright)",
+                clipPath:
+                  "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+              }}
             >
               <button
                 onClick={(e) => {
@@ -282,12 +301,12 @@ export default function Workouts() {
         </div>
       </div>
       <div className="px-4 pb-4">
-        <button
+        <ChamferButton
           onClick={(e) => handleStartWorkout(e, routine.id)}
-          className="w-full py-2.5 bg-accent hover:bg-accent-hover active:scale-[0.98] text-white font-medium rounded-lg transition-colors"
+          size="sm"
         >
           Start Routine
-        </button>
+        </ChamferButton>
       </div>
     </div>
   );
@@ -350,8 +369,15 @@ export default function Workouts() {
             </button>
             {menuOpen?.type === "folder" && menuOpen?.id === folder.id && (
               <div
-                className="fixed bg-surface border border-border rounded-lg shadow-lg z-50"
-                style={{ right: "1rem", width: "10rem" }}
+                className="fixed shadow-lg z-50"
+                style={{
+                  right: "1rem",
+                  width: "10rem",
+                  background: "var(--color-surface)",
+                  border: "1px solid var(--color-border-bright)",
+                  clipPath:
+                    "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+                }}
               >
                 <button
                   onClick={(e) => {
@@ -400,12 +426,9 @@ export default function Workouts() {
     <div className="min-h-screen bg-bg">
       <TopBar title="My Routines" />
       <div className="px-6 py-6 pb-24">
-        <button
-          onClick={handleStartEmptyWorkout}
-          className="w-full py-4 bg-accent hover:bg-accent-hover active:scale-[0.98] text-white font-semibold rounded-xl transition-all mb-4 text-base tracking-wide"
-        >
+        <ChamferButton onClick={handleStartEmptyWorkout} className="mb-4">
           Empty Workout
-        </button>
+        </ChamferButton>
 
         {/* Action Buttons */}
         <div className="flex gap-3 mb-6">
@@ -414,17 +437,31 @@ export default function Workouts() {
               setNewFolderName("");
               setShowCreateFolder(true);
             }}
-            className="flex-1 flex items-center justify-center gap-2 py-4 bg-surface border-2 border-border text-muted font-medium rounded-xl hover:bg-surface-raised transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 py-3 font-medium text-sm uppercase tracking-[0.15em] transition-all active:scale-[0.98]"
+            style={{
+              background: "transparent",
+              border: "1px solid var(--color-border)",
+              color: "var(--color-muted)",
+              clipPath:
+                "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+              fontFamily: "monospace",
+            }}
           >
-            <span className="text-xl">📁</span>
-            New Folder
+            📁 Folder
           </button>
           <button
             onClick={() => navigate("/workouts/create")}
-            className="flex-1 flex items-center justify-center gap-2 py-4 bg-surface border-2 border-accent text-accent font-medium rounded-xl hover:bg-accent-subtle transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 py-3 font-medium text-sm uppercase tracking-[0.15em] transition-all active:scale-[0.98]"
+            style={{
+              background: "var(--color-accent-subtle)",
+              border: "1px solid var(--color-accent-35)",
+              color: "var(--color-accent)",
+              clipPath:
+                "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+              fontFamily: "monospace",
+            }}
           >
-            <span className="text-xl">📋</span>
-            New Routine
+            📋 Routine
           </button>
         </div>
 
@@ -508,8 +545,23 @@ export default function Workouts() {
       </div>
       {/* Move to Folder Bottom Sheet */}
       {movingRoutineId && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-end">
-          <div className="bg-surface border-t border-border w-full rounded-t-2xl p-6">
+        <div
+          className="fixed inset-0 z-50 flex items-end"
+          style={{ background: "rgba(0,0,0,0.85)" }}
+        >
+          <div
+            className="w-full p-6 modal-slide-up"
+            style={{
+              background: "var(--color-surface)",
+              borderTop: "1px solid var(--color-border-bright)",
+              borderLeft: "1px solid var(--color-border)",
+              borderRight: "1px solid var(--color-border)",
+              clipPath:
+                "polygon(12px 0%, calc(100% - 12px) 0%, 100% 12px, 100% 100%, 0% 100%, 0% 12px)",
+              boxShadow:
+                "0 -8px 48px rgba(0,0,0,0.95), 0 0 24px var(--color-accent-15)",
+            }}
+          >
             <h3 className="font-semibold text-text mb-1">Move to Folder</h3>
             <p className="text-sm text-muted mb-4">{movingRoutine?.name}</p>
             <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -517,11 +569,24 @@ export default function Workouts() {
                 <button
                   key={folder.id}
                   onClick={() => handleMoveRoutine(movingRoutineId, folder.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-colors ${
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all active:scale-[0.99]"
+                  style={
                     movingRoutine?.folder_id === folder.id
-                      ? "border-accent bg-accent-subtle text-accent"
-                      : "border-border hover:bg-surface-raised text-text"
-                  }`}
+                      ? {
+                          background: "var(--color-accent-subtle)",
+                          border: "1px solid var(--color-accent-35)",
+                          color: "var(--color-accent)",
+                          clipPath:
+                            "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+                        }
+                      : {
+                          background: "transparent",
+                          border: "1px solid var(--color-border)",
+                          color: "var(--color-text)",
+                          clipPath:
+                            "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+                        }
+                  }
                 >
                   <span>📁</span>
                   <span className="font-medium">{folder.name}</span>
@@ -533,7 +598,13 @@ export default function Workouts() {
               {movingRoutine?.folder_id && (
                 <button
                   onClick={() => handleMoveRoutine(movingRoutineId, null)}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-border hover:bg-surface-raised text-left text-muted transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-muted transition-all active:scale-[0.99]"
+                  style={{
+                    background: "transparent",
+                    border: "1px solid var(--color-border)",
+                    clipPath:
+                      "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+                  }}
                 >
                   <span>↩️</span>
                   <span>Move back to My Routines</span>
@@ -547,7 +618,14 @@ export default function Workouts() {
             </div>
             <button
               onClick={() => setMovingRoutineId(null)}
-              className="w-full mt-4 py-3 border border-border rounded-xl text-muted font-medium hover:bg-surface-raised transition-colors"
+              className="w-full mt-4 py-3 text-muted font-bold uppercase tracking-[0.15em] text-sm transition-all active:scale-[0.98]"
+              style={{
+                background: "transparent",
+                border: "1px solid var(--color-border)",
+                clipPath:
+                  "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+                fontFamily: "monospace",
+              }}
             >
               Cancel
             </button>

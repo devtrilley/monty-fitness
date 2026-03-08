@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TopBar from "../components/TopBar";
+import ChamferButton from "../components/ChamferButton";
+
 import {
   getChallenges,
   getChallengeProgress,
@@ -99,7 +101,15 @@ export default function Challenges() {
       <TopBar title="Challenges" />
       <div className="px-6 py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {challenges.length === 0 && (
-          <div className="col-span-full bg-surface rounded-xl border border-border p-10 text-center">
+          <div
+            className="col-span-full p-10 text-center"
+            style={{
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              clipPath:
+                "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+            }}
+          >
             <p className="text-3xl mb-3">🏆</p>
             <p className="font-semibold text-text mb-1">No challenges yet</p>
             <p className="text-sm text-muted">Check back soon.</p>
@@ -117,7 +127,14 @@ export default function Challenges() {
           return (
             <div
               key={ch.id}
-              className="bg-surface rounded-xl border border-border overflow-hidden flex flex-col"
+              className="flex flex-col"
+              style={{
+                background: "var(--color-surface)",
+                border: "1px solid var(--color-border)",
+                clipPath:
+                  "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+                overflow: "hidden",
+              }}
             >
               {ch.image_url && (
                 <img
@@ -134,18 +151,27 @@ export default function Challenges() {
                   {ch.description}
                 </p>
 
-                <div className="w-full bg-surface-raised rounded-full h-1.5 mb-3">
+                <div
+                  className="w-full rounded-full h-1.5 mb-3"
+                  style={{ background: "var(--color-surface-raised)" }}
+                >
                   <div
-                    className={`h-1.5 rounded-full transition-all ${
-                      completed
-                        ? "bg-success"
+                    className="h-1.5 rounded-full transition-all"
+                    style={{
+                      width: `${percent}%`,
+                      background: completed
+                        ? "var(--color-success)"
                         : joined
-                        ? "bg-accent"
-                        : "bg-border"
-                    }`}
-                    style={{ width: `${percent}%` }}
+                        ? "var(--color-accent)"
+                        : "var(--color-border)",
+                      boxShadow:
+                        joined && !completed
+                          ? "0 0 6px var(--color-accent-60)"
+                          : "none",
+                    }}
                   />
                 </div>
+                
 
                 {joined && !completed && (
                   <p className="text-xs text-muted mb-3">
@@ -162,29 +188,23 @@ export default function Challenges() {
 
                 <div className="mt-auto">
                   {!joined ? (
-                    <button
-                      onClick={() => handleJoin(ch.id)}
-                      className="w-full bg-accent hover:bg-accent-hover text-white py-2.5 rounded-lg font-medium transition-colors"
-                    >
+                    <ChamferButton onClick={() => handleJoin(ch.id)} size="sm">
                       Join Challenge
-                    </button>
+                    </ChamferButton>
                   ) : !completed ? (
-                    <button
+                    <ChamferButton
                       onClick={() => handleStartDay(ch)}
                       disabled={starting === ch.id}
-                      className="w-full bg-success/90 hover:bg-success disabled:opacity-50 text-white py-2.5 rounded-lg font-medium transition-colors"
+                      size="sm"
                     >
                       {starting === ch.id
                         ? "Starting..."
                         : `Start Day ${currentDay}`}
-                    </button>
+                    </ChamferButton>
                   ) : (
-                    <button
-                      disabled
-                      className="w-full bg-surface-raised text-muted py-2.5 rounded-lg font-medium cursor-not-allowed"
-                    >
+                    <ChamferButton disabled size="sm" variant="secondary">
                       Completed
-                    </button>
+                    </ChamferButton>
                   )}
                 </div>
               </div>

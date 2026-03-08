@@ -6,8 +6,8 @@ export default function AdminProtectedRoute({ children }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-950">
-        <div className="text-gray-500 text-sm">Loading...</div>
+      <div className="flex items-center justify-center min-h-screen bg-bg">
+        <div className="text-sm" style={{ color: "var(--color-muted)" }}>Loading...</div>
       </div>
     );
   }
