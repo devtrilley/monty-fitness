@@ -76,7 +76,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!loaded || !user?.username) return;
-    const greetings = ["WELCOME BACK", "LET'S GET TO WORK", "TIME TO TRAIN", "STAY THE COURSE", "NO DAYS OFF"];
+    const greetings = [
+      "WELCOME BACK",
+      "LET'S GET TO WORK",
+      "TIME TO TRAIN",
+      "STAY THE COURSE",
+      "NO DAYS OFF",
+    ];
     const chosen = greetings[Math.floor(Math.random() * greetings.length)];
     const target = `${chosen}, ${user.username.toUpperCase()}`;
     let i = 0;
@@ -133,7 +139,11 @@ export default function Dashboard() {
                 background: "var(--color-accent)",
                 marginLeft: "2px",
                 verticalAlign: "middle",
-                opacity: typedText.length === (`WELCOME BACK, ${user?.username?.toUpperCase()}`).length ? 0 : 1,
+                opacity:
+                  typedText.length ===
+                  `WELCOME BACK, ${user?.username?.toUpperCase()}`.length
+                    ? 0
+                    : 1,
               }}
             />
           </span>

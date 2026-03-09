@@ -297,7 +297,9 @@ class WorkoutSession(db.Model):
             "pr_count": self.count_prs(),
             "challenge_id": self.challenge_id,
             "challenge_required_reps": (
-                self.challenge.days_required if self.challenge_id and self.challenge else None
+                self.challenge.days_required
+                if self.challenge_id and self.challenge
+                else None
             ),
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,

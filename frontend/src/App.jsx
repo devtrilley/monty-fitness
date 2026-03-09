@@ -25,6 +25,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import Legal from "./pages/Legal";
 import BottomNav from "./components/BottomNav";
+import TronToaster from "./components/TronToaster";
 
 // Must be inside BrowserRouter to access useLocation
 function AppRoutes() {
@@ -149,6 +150,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <TronToaster />
         <AppRoutes />
       </BrowserRouter>
     </AuthProvider>

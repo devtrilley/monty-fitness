@@ -55,7 +55,9 @@ app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "dev-jwt-secret")
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=4)  # 4 hours instead of 15 min
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)  # 30 days instead of 7
 app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
-app.config["JWT_COOKIE_SECURE"] = False  # Set True in productionapp.config["JWT_COOKIE_SECURE"] = os.getenv("FLASK_ENV") == "production"
+app.config["JWT_COOKIE_SECURE"] = (
+    False  # Set True in productionapp.config["JWT_COOKIE_SECURE"] = os.getenv("FLASK_ENV") == "production"
+)
 app.config["JWT_COOKIE_CSRF_PROTECT"] = False
 app.config["JWT_COOKIE_SAMESITE"] = "Lax"
 

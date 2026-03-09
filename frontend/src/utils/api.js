@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -28,7 +29,10 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Don't try to refresh for auth endpoints
+    const isAuthEndpoint = originalRequest.url?.includes("/auth/");
+    
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
       try {
@@ -68,20 +72,31 @@ export const getAccessToken = () => {
 };
 
 // Auth API
+// Auth API
 export const register = async (username, email, password) => {
-  const { data } = await api.post("/auth/register", {
-    username,
-    email,
-    password,
-  });
-  setAccessToken(data.access_token);
-  return { data, ok: true };
+  try {
+    const { data } = await api.post("/auth/register", {
+      username,
+      email,
+      password,
+    });
+    setAccessToken(data.access_token);
+    return { data, ok: true };
+  } catch (err) {
+    const message = err.response?.data?.error || "Registration failed";
+    return { data: { error: message }, ok: false };
+  }
 };
 
 export const login = async (email, password) => {
-  const { data } = await api.post("/auth/login", { email, password });
-  setAccessToken(data.access_token);
-  return { data, ok: true };
+  try {
+    const { data } = await api.post("/auth/login", { email, password });
+    setAccessToken(data.access_token);
+    return { data, ok: true };
+  } catch (err) {
+    const message = err.response?.data?.error || "Login failed";
+    return { data: { error: message }, ok: false };
+  }
 };
 
 export const logout = async () => {
