@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { getExercises } from "../utils/api";
-import axios from "axios";
+import { getExercises, getExerciseFilters } from "../utils/api";
 import BaseModal from "./BaseModal";
 import ExerciseImage from "./ExerciseImage";
 
@@ -82,11 +81,11 @@ export default function ExercisePicker({
         try {
           const [exData, filterData] = await Promise.all([
             getExercises(),
-            axios.get("http://127.0.0.1:5000/api/exercises/filters"),
+            getExerciseFilters(),
           ]);
           setExercises(exData.exercises || []);
-          const eq = filterData.data.equipment || [];
-          const mu = filterData.data.muscles || [];
+          const eq = filterData.equipment || [];
+          const mu = filterData.muscles || [];
           setEquipmentOptions(eq.sort());
           setMuscleOptions(mu.sort());
         } catch (error) {

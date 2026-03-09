@@ -31,8 +31,12 @@ api.interceptors.response.use(
 
     // Don't try to refresh for auth endpoints
     const isAuthEndpoint = originalRequest.url?.includes("/auth/");
-    
-    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
+
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isAuthEndpoint
+    ) {
       originalRequest._retry = true;
 
       try {
@@ -124,6 +128,11 @@ export const updateProfile = async (bio, profilePhotoUrl) => {
 // Exercise API
 export const getExercises = async (filters = {}) => {
   const { data } = await api.get("/exercises", { params: filters });
+  return data;
+};
+
+export const getExerciseFilters = async () => {
+  const { data } = await api.get("/exercises/filters");
   return data;
 };
 
