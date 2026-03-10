@@ -1,13 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useNavigate, useParams } from "react-router-dom";
 import { getRoutineById, updateRoutine } from "../utils/api";
 import toast from "react-hot-toast";
 import TronToaster from "../components/TronToaster";
 import ExercisePicker from "../components/ExercisePicker";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { getSetLabel } from "../utils/setHelpers";
-import TopBar from "../components/TopBar";
-import ExerciseImage from "../components/ExerciseImage";
+import RoutineExerciseCard from "../components/RoutineExerciseCard";
 
 export default function EditRoutine() {
   const { id } = useParams();
@@ -17,7 +15,32 @@ export default function EditRoutine() {
   const [showExercisePicker, setShowExercisePicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
+  const [replacingExerciseIdx, setReplacingExerciseIdx] = useState(null);
+  const [reorderMode, setReorderMode] = useState(false);
+  const longPressTimer = useRef(null);
   const navigate = useNavigate();
+
+  const handleLongPressStart = () => {
+    if (selectedExercises.length < 2) return;
+    longPressTimer.current = setTimeout(() => {
+      setReorderMode(true);
+    }, 500);
+  };
+
+  const handleLongPressEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+  };
+
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+    const reordered = Array.from(selectedExercises);
+    const [moved] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, moved);
+    setSelectedExercises(reordered);
+    setReorderMode(false);
+  };
 
   useEffect(() => {
     const fetchRoutine = async () => {
@@ -73,8 +96,30 @@ export default function EditRoutine() {
     );
   };
 
-  const removeExercise = (index) =>
+  const handleReplaceExercise = (newExercise) => {
+    const updated = [...selectedExercises];
+    updated[replacingExerciseIdx] = {
+      ...updated[replacingExerciseIdx],
+      exercise_id: newExercise.id,
+      exercise_name: newExercise.name,
+      equipment: newExercise.equipment,
+      image_url: newExercise.image_url || null,
+    };
+    setSelectedExercises(updated);
+    setShowExercisePicker(false);
+    setReplacingExerciseIdx(null);
+    toast.success("Exercise replaced");
+  };
+
+  const updateExercise = (index, updatedExercise) => {
+    const updated = [...selectedExercises];
+    updated[index] = updatedExercise;
+    setSelectedExercises(updated);
+  };
+
+  const removeExercise = (index) => {
     setSelectedExercises(selectedExercises.filter((_, i) => i !== index));
+  };
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -111,8 +156,27 @@ export default function EditRoutine() {
   return (
     <div className="min-h-screen bg-bg">
       <TronToaster />
-      <TopBar title="Edit Routine" />
-      <div className="px-6 py-6 pb-32">
+      <div className="sticky top-0 z-10 bg-surface border-b border-border px-4 py-3 flex items-center justify-between">
+        <button
+          onClick={() => navigate(`/workouts/${id}`)}
+          className="text-accent font-medium"
+        >
+          Cancel
+        </button>
+        <h1 className="text-lg font-semibold text-text">Edit Routine</h1>
+        <button
+          onClick={handleSave}
+          disabled={loading}
+          className="px-4 py-1.5 font-bold text-sm rounded-lg disabled:opacity-40"
+          style={{
+            background: "var(--color-accent)",
+            color: "#000",
+          }}
+        >
+          {loading ? "..." : "Save"}
+        </button>
+      </div>
+      <div className="px-6 py-6 pb-40">
         <div className="mb-6">
           <label className="block text-sm font-medium text-text mb-2">
             Routine Title
@@ -137,9 +201,10 @@ export default function EditRoutine() {
             className="w-full px-4 py-3 border border-border bg-surface-raised text-text rounded-xl focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-muted"
           />
         </div>
-
         <div>
-          <h2 className="text-sm font-medium text-text mb-3">Exercises</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-medium text-text">Exercises</h2>
+          </div>
           {selectedExercises.length === 0 ? (
             <div className="bg-surface p-8 rounded-xl border border-border text-center mb-4">
               <p className="text-muted mb-2">No exercises added yet</p>
@@ -147,256 +212,77 @@ export default function EditRoutine() {
                 Add exercises to build your routine
               </p>
             </div>
+          ) : reorderMode ? (
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="inline-reorder">
+                {(provided) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="space-y-2 mb-4"
+                  >
+                    {selectedExercises.map((ex, index) => (
+                      <Draggable
+                        key={`reorder-${ex.exercise_id}-${index}`}
+                        draggableId={`reorder-${ex.exercise_id}-${index}`}
+                        index={index}
+                      >
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className="flex items-center gap-3 p-3 rounded-lg transition-all"
+                            style={{
+                              background: snapshot.isDragging
+                                ? "var(--color-accent-subtle)"
+                                : "var(--color-surface)",
+                              border: snapshot.isDragging
+                                ? "2px solid var(--color-accent)"
+                                : "1px solid var(--color-border)",
+                              boxShadow: snapshot.isDragging
+                                ? "0 8px 32px rgba(0,200,255,0.3)"
+                                : "none",
+                              ...provided.draggableProps.style,
+                            }}
+                          >
+                            <img
+                              src={ex.image_url || "/placeholder-exercise.png"}
+                              alt={ex.exercise_name}
+                              className="w-10 h-10 rounded-full object-cover bg-surface-raised"
+                            />
+                            <span className="text-accent font-medium flex-1">
+                              {ex.exercise_name} ({ex.equipment})
+                            </span>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
           ) : (
-            <div className="space-y-3 mb-4">
-              <DragDropContext
-                onDragEnd={(result) => {
-                  if (!result.destination) return;
-                  const items = Array.from(selectedExercises);
-                  const [moved] = items.splice(result.source.index, 1);
-                  items.splice(result.destination.index, 0, moved);
-                  setSelectedExercises(items);
-                }}
-              >
-                <Droppable droppableId="exercises">
-                  {(provided) => (
-                    <div {...provided.droppableProps} ref={provided.innerRef}>
-                      {selectedExercises.map((ex, index) => (
-                        <Draggable
-                          key={`exercise-${ex.exercise_id}-${index}`}
-                          draggableId={`exercise-${ex.exercise_id}-${index}`}
-                          index={index}
-                        >
-                          {(provided) => {
-                            const showWeight = ex.equipment !== "Bodyweight";
-                            return (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                className="p-4 mb-4"
-                                style={{
-                                  background: "var(--color-surface)",
-                                  border: "1px solid var(--color-border)",
-                                  clipPath:
-                                    "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
-                                }}
-                              >
-                                <div className="flex items-center justify-between gap-4 mb-4">
-                                  <span
-                                    {...provided.dragHandleProps}
-                                    className="cursor-grab text-muted hover:text-text text-xl"
-                                  >
-                                    ☰
-                                  </span>
-                                  <div className="flex items-center gap-2 flex-1 min-w-0 justify-center">
-                                    <ExerciseImage
-                                      imageUrl={ex.image_url}
-                                      name={ex.exercise_name}
-                                      size="sm"
-                                    />
-                                    <h3 className="font-medium text-text truncate">
-                                      {ex.exercise_name}
-                                    </h3>
-                                  </div>
-                                  <button
-                                    onClick={() => removeExercise(index)}
-                                    className="text-danger text-sm hover:text-red-400 flex-shrink-0"
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
-                                <div className="mb-4">
-                                  <label className="block text-xs font-medium text-muted mb-1">
-                                    Note
-                                  </label>
-                                  <textarea
-                                    value={ex.notes || ""}
-                                    onChange={(e) => {
-                                      const u = [...selectedExercises];
-                                      u[index].notes = e.target.value;
-                                      setSelectedExercises(u);
-                                    }}
-                                    placeholder="e.g. Focus on hypertrophy, slow eccentric"
-                                    rows={2}
-                                    className="w-full px-3 py-2 border border-border bg-surface-raised text-text rounded-lg text-sm placeholder:text-muted"
-                                  />
-                                </div>
-                                <div className="mb-4">
-                                  <label className="block text-xs font-medium text-muted mb-1">
-                                    Rest Timer:
-                                  </label>
-                                  <select
-                                    value={ex.rest_seconds}
-                                    onChange={(e) => {
-                                      const u = [...selectedExercises];
-                                      u[index].rest_seconds = parseInt(
-                                        e.target.value
-                                      );
-                                      setSelectedExercises(u);
-                                    }}
-                                    className="w-full px-3 py-2 border border-border bg-surface-raised text-text rounded-lg text-sm"
-                                  >
-                                    <option value={60}>01:00</option>
-                                    <option value={90}>01:30</option>
-                                    <option value={120}>02:00</option>
-                                    <option value={150}>02:30</option>
-                                    <option value={180}>03:00</option>
-                                    <option value={240}>04:00</option>
-                                    <option value={300}>05:00</option>
-                                  </select>
-                                </div>
-                                <div
-                                  className={`grid ${
-                                    showWeight
-                                      ? "grid-cols-[50px_80px_80px_36px]"
-                                      : "grid-cols-[50px_80px_36px]"
-                                  } gap-1.5 mb-2 text-xs font-medium text-muted uppercase`}
-                                >
-                                  <div>SET</div>
-                                  {showWeight && <div>LBS</div>}
-                                  <div>REPS</div>
-                                  <div></div>
-                                </div>
-                                {(ex.sets || []).map((set, setIndex) => (
-                                  <div
-                                    key={setIndex}
-                                    className={`grid ${
-                                      showWeight
-                                        ? "grid-cols-[50px_80px_80px_36px]"
-                                        : "grid-cols-[50px_80px_36px]"
-                                    } gap-1.5 mb-2 items-center`}
-                                  >
-                                    <button
-                                      onClick={() => {
-                                        const u = [...selectedExercises];
-                                        const types = [
-                                          "normal",
-                                          "warmup",
-                                          "failure",
-                                          "drop",
-                                        ];
-                                        u[index].sets[setIndex].type =
-                                          types[
-                                            (types.indexOf(
-                                              set.type || "normal"
-                                            ) +
-                                              1) %
-                                              types.length
-                                          ];
-                                        setSelectedExercises(u);
-                                      }}
-                                      className="h-9 rounded-lg font-medium text-sm"
-                                      style={
-                                        set.type === "warmup"
-                                          ? {
-                                              background:
-                                                "rgba(234,179,8,0.15)",
-                                              color: "#facc15",
-                                              border:
-                                                "1px solid rgba(234,179,8,0.3)",
-                                            }
-                                          : set.type === "failure"
-                                          ? {
-                                              background:
-                                                "var(--color-accent-subtle)",
-                                              color: "var(--color-accent)",
-                                              border:
-                                                "1px solid var(--color-accent-30)",
-                                              boxShadow:
-                                                "0 0 6px var(--color-accent-30)",
-                                            }
-                                          : set.type === "drop"
-                                          ? {
-                                              background:
-                                                "rgba(59,130,246,0.15)",
-                                              color: "#60a5fa",
-                                              border:
-                                                "1px solid rgba(59,130,246,0.3)",
-                                            }
-                                          : {
-                                              background:
-                                                "var(--color-surface-raised)",
-                                              color: "var(--color-text)",
-                                            }
-                                      }
-                                    >
-                                      {getSetLabel(ex.sets, setIndex)}
-                                    </button>
-                                    {showWeight && (
-                                      <input
-                                        type="number"
-                                        value={set.weight ?? ""}
-                                        min="0"
-                                        onChange={(e) => {
-                                          const v = e.target.value;
-                                          const u = [...selectedExercises];
-                                          u[index].sets[setIndex].weight =
-                                            v === ""
-                                              ? ""
-                                              : Math.max(0, parseFloat(v));
-                                          setSelectedExercises(u);
-                                        }}
-                                        onWheel={(e) => e.target.blur()}
-                                        placeholder="—"
-                                        className="h-9 px-2 border border-border bg-surface-raised text-text rounded-lg text-sm text-center placeholder:text-muted"
-                                      />
-                                    )}
-                                    <input
-                                      type="number"
-                                      value={set.reps ?? ""}
-                                      min="0"
-                                      onChange={(e) => {
-                                        const v = e.target.value;
-                                        const u = [...selectedExercises];
-                                        u[index].sets[setIndex].reps =
-                                          v === ""
-                                            ? ""
-                                            : Math.max(0, parseInt(v));
-                                        setSelectedExercises(u);
-                                      }}
-                                      onWheel={(e) => e.target.blur()}
-                                      placeholder="—"
-                                      className="h-9 px-2 border border-border bg-surface-raised text-text rounded-lg text-sm text-center placeholder:text-muted"
-                                    />
-                                    <button
-                                      onClick={() => {
-                                        const u = [...selectedExercises];
-                                        u[index].sets = u[index].sets.filter(
-                                          (_, i) => i !== setIndex
-                                        );
-                                        setSelectedExercises(u);
-                                      }}
-                                      className="h-9 w-9 flex items-center justify-center text-muted hover:text-danger text-xl"
-                                    >
-                                      ×
-                                    </button>
-                                  </div>
-                                ))}
-                                <button
-                                  onClick={() => {
-                                    const u = [...selectedExercises];
-                                    if (!u[index].sets) u[index].sets = [];
-                                    u[index].sets.push({
-                                      type: "normal",
-                                      weight: "",
-                                      reps: "",
-                                    });
-                                    setSelectedExercises(u);
-                                  }}
-                                  className="w-full py-2 text-sm text-muted hover:text-text border border-dashed border-border rounded-lg mt-2 transition-colors"
-                                >
-                                  + Add set
-                                </button>
-                              </div>
-                            );
-                          }}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              </DragDropContext>
+            <div className="space-y-4 mb-4">
+              {selectedExercises.map((ex, index) => (
+                <RoutineExerciseCard
+                  key={`exercise-${ex.exercise_id}-${index}`}
+                  exercise={ex}
+                  index={index}
+                  onUpdate={updateExercise}
+                  onRemove={removeExercise}
+                  onReplace={(idx) => {
+                    setReplacingExerciseIdx(idx);
+                    setShowExercisePicker(true);
+                  }}
+                  onReorder={() => setReorderMode(true)}
+                  showReorder={true}
+                  totalExercises={selectedExercises.length}
+                  onLongPressStart={handleLongPressStart}
+                  onLongPressEnd={handleLongPressEnd}
+                />
+              ))}
             </div>
           )}
           <button
@@ -415,45 +301,19 @@ export default function EditRoutine() {
           </button>
         </div>
       </div>
-
-      {/* Sticky Save Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border px-6 py-4 pb-safe flex gap-3">
-        <button
-          onClick={() => navigate(`/workouts/${id}`)}
-          className="flex-1 py-3.5 font-bold uppercase tracking-[0.15em] text-sm transition-all active:scale-[0.98]"
-          style={{
-            background: "transparent",
-            border: "1px solid var(--color-border)",
-            color: "var(--color-muted)",
-            clipPath:
-              "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
-            fontFamily: "monospace",
-          }}
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={loading}
-          className="flex-1 py-3.5 font-bold uppercase tracking-[0.15em] text-sm transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{
-            background: "var(--color-success)",
-            color: "#000",
-            border: "1px solid var(--color-success)",
-            clipPath:
-              "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
-            fontFamily: "monospace",
-          }}
-        >
-          {loading ? "Saving..." : "Save Changes"}
-        </button>
-      </div>
-
       <ExercisePicker
         isOpen={showExercisePicker}
-        onClose={() => setShowExercisePicker(false)}
-        onSelectExercises={addExercises}
-        multiSelect
+        onClose={() => {
+          setShowExercisePicker(false);
+          setReplacingExerciseIdx(null);
+        }}
+        onSelectExercise={
+          replacingExerciseIdx !== null ? handleReplaceExercise : undefined
+        }
+        onSelectExercises={
+          replacingExerciseIdx === null ? addExercises : undefined
+        }
+        multiSelect={replacingExerciseIdx === null}
         alreadyAdded={selectedExercises.map((e) => e.exercise_id)}
       />
     </div>

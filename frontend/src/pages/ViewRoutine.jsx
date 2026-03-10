@@ -68,28 +68,44 @@ export default function ViewRoutine() {
           </div>
         </div>
 
-        {/* Start Button */}
-        <button
-          onClick={async () => {
-            try {
-              const { session } = await startWorkout(id);
-              navigate(`/workouts/session/${session.id}`);
-            } catch {
-              toast.error("Failed to start workout");
-            }
-          }}
-          className="w-full py-3 active:scale-[0.98] font-bold text-sm tracking-[0.2em] uppercase transition-all mb-8"
-          style={{
-            background: "var(--color-accent)",
-            color: "#000",
-            border: "1px solid var(--color-accent-80)",
-            clipPath: "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
-            fontFamily: "monospace",
-          }}
-        >
-          Start Routine
-        </button>
-
+        {/* Action Buttons */}
+        <div className="flex gap-3 mb-8">
+          <button
+            onClick={async () => {
+              try {
+                const { session } = await startWorkout(id);
+                navigate(`/workouts/session/${session.id}`);
+              } catch {
+                toast.error("Failed to start workout");
+              }
+            }}
+            className="flex-1 py-3 active:scale-[0.98] font-bold text-sm tracking-[0.2em] uppercase transition-all"
+            style={{
+              background: "var(--color-accent)",
+              color: "#000",
+              border: "1px solid var(--color-accent-80)",
+              clipPath:
+                "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+              fontFamily: "monospace",
+            }}
+          >
+            Start Routine
+          </button>
+          <button
+            onClick={() => navigate(`/workouts/${id}/edit`)}
+            className="py-3 px-6 active:scale-[0.98] font-bold text-sm tracking-[0.15em] uppercase transition-all"
+            style={{
+              background: "transparent",
+              border: "1px solid var(--color-border)",
+              color: "var(--color-muted)",
+              clipPath:
+                "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+              fontFamily: "monospace",
+            }}
+          >
+            Edit
+          </button>
+        </div>
         <h3 className="text-sm font-semibold text-text mb-3">Exercises</h3>
 
         {(routine.exercises || []).length === 0 && (
@@ -103,7 +119,12 @@ export default function ViewRoutine() {
             <div
               key={idx}
               className="overflow-hidden"
-            style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", clipPath: "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)" }}
+              style={{
+                background: "var(--color-surface)",
+                border: "1px solid var(--color-border)",
+                clipPath:
+                  "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+              }}
             >
               <div className="p-4 border-b border-border">
                 <div className="flex items-center gap-3">

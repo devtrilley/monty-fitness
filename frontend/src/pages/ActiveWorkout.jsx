@@ -1,16 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useParams, useNavigate } from "react-router-dom";
 import { getWorkoutSession, finishWorkout, discardWorkout } from "../utils/api";
 import toast from "react-hot-toast";
 import TronToaster from "../components/TronToaster";
-import { getSetLabel } from "../utils/setHelpers";
 import ExercisePicker from "../components/ExercisePicker";
-import ExerciseImage from "../components/ExerciseImage";
 import SetTypeModal from "../components/SetTypeModal";
 import RestTimerModal from "../components/RestTimerModal";
 import TimeEditModal from "../components/TimeEditModal";
 import ConfirmModal from "../components/ConfirmModal";
-import { useRef } from "react";
+import ReorderExercisesModal from "../components/ReorderExercisesModal";
+import ActiveExerciseCard from "../components/ActiveExerciseCard";
 
 const formatRestTime = (seconds) => {
   if (!seconds) return "0s";
@@ -24,7 +24,10 @@ const formatRestTime = (seconds) => {
 export default function ActiveWorkout() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState(() => {
+    const saved = localStorage.getItem(`active_workout_${sessionId}`);
+    return saved ? JSON.parse(saved) : null;
+  });
   const [loading, setLoading] = useState(true);
   const [startTime, setStartTime] = useState(Date.now());
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -48,8 +51,32 @@ export default function ActiveWorkout() {
   const [showChallengeWarning, setShowChallengeWarning] = useState(false);
   const [challengeRepsShort, setChallengeRepsShort] = useState(0);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
-
+  const [showReorderModal, setShowReorderModal] = useState(false);
+  const [reorderMode, setReorderMode] = useState(false);
+  const longPressTimer = useRef(null);
   const audioCtxRef = useRef(null);
+
+  const handleLongPressStart = () => {
+    if (session?.exercises?.length < 2) return;
+    longPressTimer.current = setTimeout(() => {
+      setReorderMode(true);
+    }, 500);
+  };
+
+  const handleLongPressEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+  };
+
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+    const reordered = Array.from(session.exercises);
+    const [moved] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, moved);
+    setSession({ ...session, exercises: reordered });
+    setReorderMode(false);
+  };
 
   const getAudioCtx = () => {
     if (!audioCtxRef.current) {
@@ -86,8 +113,41 @@ export default function ActiveWorkout() {
     } catch {}
   };
 
+  // Save session to localStorage on every change
+  useEffect(() => {
+    if (session) {
+      localStorage.setItem(
+        `active_workout_${sessionId}`,
+        JSON.stringify(session)
+      );
+    }
+  }, [session, sessionId]);
+
+  // Save completedSets to localStorage
+  useEffect(() => {
+    localStorage.setItem(
+      `active_workout_completed_${sessionId}`,
+      JSON.stringify([...completedSets])
+    );
+  }, [completedSets, sessionId]);
+
   useEffect(() => {
     const fetchSession = async () => {
+      // Check if we have saved data
+      const savedSession = localStorage.getItem(`active_workout_${sessionId}`);
+      const savedCompleted = localStorage.getItem(
+        `active_workout_completed_${sessionId}`
+      );
+
+      if (savedSession) {
+        setSession(JSON.parse(savedSession));
+        if (savedCompleted) {
+          setCompletedSets(new Set(JSON.parse(savedCompleted)));
+        }
+        setLoading(false);
+        return;
+      }
+
       try {
         const data = await getWorkoutSession(sessionId);
         setSession(data);
@@ -280,6 +340,9 @@ export default function ActiveWorkout() {
         skip_challenge_complete: skipChallenge,
       });
       toast.success("Workout completed!");
+      // Clear localStorage
+      localStorage.removeItem(`active_workout_${sessionId}`);
+      localStorage.removeItem(`active_workout_completed_${sessionId}`);
       const params = new URLSearchParams(window.location.search);
       navigate(
         params.get("from") === "challenge" ? "/challenges" : "/dashboard"
@@ -293,6 +356,8 @@ export default function ActiveWorkout() {
     try {
       await discardWorkout(sessionId);
       toast.success("Workout discarded");
+      localStorage.removeItem(`active_workout_${sessionId}`);
+      localStorage.removeItem(`active_workout_completed_${sessionId}`);
       navigate("/workouts");
     } catch {
       toast.error("Failed to discard workout");
@@ -317,7 +382,7 @@ export default function ActiveWorkout() {
   if (!session) return null;
 
   return (
-    <div className="min-h-screen bg-bg pb-24">
+    <div className="min-h-screen bg-bg pb-32">
       <TronToaster />
 
       {/* Sticky Header + Stats */}
@@ -348,7 +413,7 @@ export default function ActiveWorkout() {
         </div>
 
         {/* Stats */}
-        {!statsCollapsed && (
+        {!statsCollapsed && !reorderMode && (
           <div className="px-6 py-3 border-b border-border">
             <div className="flex items-center justify-between">
               <div>
@@ -383,7 +448,7 @@ export default function ActiveWorkout() {
         )}
 
         {/* Rest Timer */}
-        {Object.keys(restTimers).length > 0 && (
+        {Object.keys(restTimers).length > 0 && !reorderMode && (
           <div className="px-6 py-2 border-b border-border">
             <div className="flex items-center justify-between gap-2 bg-accent-subtle rounded-lg p-2">
               <button
@@ -432,73 +497,76 @@ export default function ActiveWorkout() {
         )}
 
         {/* Collapse Toggle */}
-        <button
-          onClick={() => setStatsCollapsed(!statsCollapsed)}
-          className="w-full py-1.5 flex justify-center hover:bg-surface-raised transition-colors"
-        >
-          <svg
-            className={`w-4 h-4 text-muted transition-transform ${
-              statsCollapsed ? "" : "rotate-180"
-            }`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        {!reorderMode && (
+          <button
+            onClick={() => setStatsCollapsed(!statsCollapsed)}
+            className="w-full py-1.5 flex justify-center hover:bg-surface-raised transition-colors"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </button>
+            <svg
+              className={`w-4 h-4 text-muted transition-transform ${
+                statsCollapsed ? "" : "rotate-180"
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+        )}
       </div>
-
       {/* Challenge Progress Bar */}
-      {session.challenge_id && session.challenge_required_reps && (
-        <div className="px-6 py-3 bg-surface border-b border-border">
-          {(() => {
-            let completedReps = 0;
-            session.exercises.forEach((ex, exIdx) => {
-              ex.sets.forEach((set, setIdx) => {
-                if (completedSets.has(`${exIdx}-${setIdx}`) && set.reps)
-                  completedReps += set.reps;
+      {session.challenge_id &&
+        session.challenge_required_reps &&
+        !reorderMode && (
+          <div className="px-6 py-3 bg-surface border-b border-border">
+            {(() => {
+              let completedReps = 0;
+              session.exercises.forEach((ex, exIdx) => {
+                ex.sets.forEach((set, setIdx) => {
+                  if (completedSets.has(`${exIdx}-${setIdx}`) && set.reps)
+                    completedReps += set.reps;
+                });
               });
-            });
-            const required = session.challenge_required_reps;
-            const pct = Math.min((completedReps / required) * 100, 100);
-            const done = completedReps >= required;
-            return (
-              <div>
-                <div className="flex justify-between items-center mb-1.5">
-                  <p className="text-xs font-medium text-muted uppercase tracking-wide">
-                    Challenge Progress
-                  </p>
-                  <p
-                    className={`text-xs font-bold ${
-                      done ? "text-success" : "text-accent"
-                    }`}
-                  >
-                    {completedReps} / {required} reps {done ? "✓" : ""}
-                  </p>
+              const required = session.challenge_required_reps;
+              const pct = Math.min((completedReps / required) * 100, 100);
+              const done = completedReps >= required;
+              return (
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <p className="text-xs font-medium text-muted uppercase tracking-wide">
+                      Challenge Progress
+                    </p>
+                    <p
+                      className={`text-xs font-bold ${
+                        done ? "text-success" : "text-accent"
+                      }`}
+                    >
+                      {completedReps} / {required} reps {done ? "✓" : ""}
+                    </p>
+                  </div>
+                  <div className="w-full bg-surface-raised rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        done ? "bg-success" : "bg-accent"
+                      }`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="w-full bg-surface-raised rounded-full h-2">
-                  <div
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      done ? "bg-success" : "bg-accent"
-                    }`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-      )}
+              );
+            })()}
+          </div>
+        )}
 
       {/* Exercises */}
       <div className="px-6 py-6 space-y-6">
-        {session.exercises.length === 0 && (
+        {session.exercises.length === 0 && !reorderMode && (
           <div
             className="p-8 text-center"
             style={{
@@ -567,350 +635,171 @@ export default function ActiveWorkout() {
           </div>
         )}
 
-        {session.exercises.map((ex, exIdx) => {
-          const showWeight = ex.exercise?.equipment !== "Bodyweight";
-          return (
-            <div
+        {reorderMode ? (
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="active-reorder">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="space-y-2"
+                >
+                  {session.exercises.map((ex, index) => (
+                    <Draggable
+                      key={`reorder-${ex.id}-${index}`}
+                      draggableId={`reorder-${ex.id}-${index}`}
+                      index={index}
+                    >
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className="flex items-center gap-3 p-3 rounded-lg transition-all"
+                          style={{
+                            background: snapshot.isDragging
+                              ? "var(--color-accent-subtle)"
+                              : "var(--color-surface)",
+                            border: snapshot.isDragging
+                              ? "2px solid var(--color-accent)"
+                              : "1px solid var(--color-border)",
+                            boxShadow: snapshot.isDragging
+                              ? "0 8px 32px rgba(0,200,255,0.3)"
+                              : "none",
+                            ...provided.draggableProps.style,
+                          }}
+                        >
+                          <img
+                            src={
+                              ex.exercise?.image_url ||
+                              "/placeholder-exercise.png"
+                            }
+                            alt={ex.exercise?.name}
+                            className="w-10 h-10 rounded-full object-cover bg-surface-raised"
+                          />
+                          <span className="text-accent font-medium flex-1">
+                            {ex.exercise?.name} ({ex.exercise?.equipment})
+                          </span>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        ) : (
+          session.exercises.map((ex, exIdx) => (
+            <ActiveExerciseCard
               key={ex.id}
-              className="p-4"
+              exercise={ex}
+              index={exIdx}
+              completedSets={completedSets}
+              onToggleSetCompletion={toggleSetCompletion}
+              onUpdateSet={updateSet}
+              onAddSet={(idx) => {
+                const updated = { ...session };
+                const lastSet =
+                  updated.exercises[idx].sets[
+                    updated.exercises[idx].sets.length - 1
+                  ] || {};
+                updated.exercises[idx].sets.push({
+                  id: Date.now(),
+                  set_number: updated.exercises[idx].sets.length + 1,
+                  set_type: "normal",
+                  weight: lastSet.weight || null,
+                  reps: lastSet.reps || null,
+                  rir: null,
+                });
+                setSession(updated);
+              }}
+              onReplace={(idx) => {
+                setReplacingExerciseIdx(idx);
+                setShowExercisePicker(true);
+              }}
+              onRemove={(idx) => {
+                if (session.exercises.length <= 1) {
+                  toast.error("Cannot remove the last exercise");
+                  return;
+                }
+                const updated = { ...session };
+                updated.exercises = updated.exercises.filter(
+                  (_, i) => i !== idx
+                );
+                setSession(updated);
+                toast.success("Exercise removed");
+              }}
+              onOpenRestModal={(idx) => {
+                setRestTimerExerciseIdx(idx);
+                setHasScrolledRestModal(false);
+                setShowRestModal(true);
+              }}
+              onOpenSetTypeModal={(exIdx, setIdx) => {
+                setEditingSet({ exIdx, setIdx });
+                setShowSetTypeModal(true);
+              }}
+              customRestSeconds={customExerciseRest[exIdx]}
+              canRemove={session.exercises.length > 1}
+              onLongPressStart={handleLongPressStart}
+              onLongPressEnd={handleLongPressEnd}
+              onReorder={() => setReorderMode(true)}
+            />
+          ))
+        )}
+
+        {!reorderMode && (
+          <>
+            <button
+              onClick={() => {
+                setIsAddingExercise(true);
+                setShowExercisePicker(true);
+              }}
+              className="w-full py-3 mt-2 font-bold text-sm uppercase tracking-[0.2em] transition-all active:scale-[0.98]"
               style={{
-                background: "var(--color-surface)",
-                border: "1px solid var(--color-border)",
+                background: "var(--color-accent-subtle)",
+                border: "1px solid var(--color-accent-35)",
+                color: "var(--color-accent)",
                 clipPath:
                   "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+                fontFamily: "monospace",
               }}
             >
-              <div className="mb-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <ExerciseImage
-                      imageUrl={ex.exercise?.image_url}
-                      name={ex.exercise?.name}
-                    />
-                    <h3 className="font-semibold text-text">
-                      {ex.exercise.name}
-                      <span className="text-xs font-normal text-muted ml-1">
-                        ({ex.exercise.equipment})
-                      </span>
-                    </h3>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setMenuExerciseIdx(
-                        exIdx === menuExerciseIdx ? null : exIdx
-                      );
-                    }}
-                    className="p-2 text-muted hover:text-text text-xl font-bold transition-colors"
-                  >
-                    ⋮
-                  </button>
-                </div>
+              + Add Exercise
+            </button>
 
-                {/* Exercise Menu */}
-                {menuExerciseIdx === exIdx && (
-                  <div className="absolute right-8 bg-surface border border-border rounded-lg shadow-lg py-2 z-20 w-56">
-                    <button
-                      onClick={() => {
-                        setReplacingExerciseIdx(exIdx);
-                        setShowExercisePicker(true);
-                        setMenuExerciseIdx(null);
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-sm text-text hover:bg-surface-raised flex items-center gap-3"
-                    >
-                      🔄 Replace Exercise
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (session.exercises.length <= 1) {
-                          toast.error("Cannot remove the last exercise");
-                          setMenuExerciseIdx(null);
-                          return;
-                        }
-                        const updated = { ...session };
-                        updated.exercises = updated.exercises.filter(
-                          (_, i) => i !== exIdx
-                        );
-                        setSession(updated);
-                        setMenuExerciseIdx(null);
-                        toast.success("Exercise removed");
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-sm text-danger hover:bg-surface-raised flex items-center gap-3"
-                    >
-                      ✕ Remove Exercise
-                    </button>
-                  </div>
-                )}
+            <button
+              onClick={handleFinish}
+              className="w-full py-4 mt-4 active:scale-[0.98] font-bold tracking-[0.2em] uppercase text-sm transition-all"
+              style={{
+                background: "var(--color-accent)",
+                color: "#000",
+                border: "1px solid var(--color-accent-80)",
+                clipPath:
+                  "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+                fontFamily: "monospace",
+              }}
+            >
+              Finish Workout
+            </button>
+          </>
+        )}
 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setRestTimerExerciseIdx(exIdx);
-                    setHasScrolledRestModal(false);
-                    setShowRestModal(true);
-                  }}
-                  className="flex items-center gap-1 text-sm text-accent mt-2 mb-2 hover:text-accent-hover transition-colors"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  {formatRestTime(
-                    customExerciseRest[exIdx] || ex.rest_seconds || 120
-                  )}
-                </button>
-              </div>
-
-              <textarea
-                placeholder="Add notes..."
-                rows={2}
-                className="w-full text-sm text-text mb-3 px-2 py-1 border border-border bg-surface-raised rounded focus:outline-none focus:border-accent resize-none max-h-24 placeholder:text-muted"
-              />
-
-              {/* Sets Table */}
-              <div className="space-y-2">
-                <div
-                  className={`grid ${
-                    showWeight
-                      ? "grid-cols-[35px_64px_62px_62px_42px]"
-                      : "grid-cols-[35px_62px_62px_42px]"
-                  } gap-1.5 text-[10px] font-medium text-muted uppercase`}
-                >
-                  <div className="text-center">SET</div>
-                  {showWeight && <div className="text-center">LBS</div>}
-                  <div className="text-center">REPS</div>
-                  <div className="text-center">RIR</div>
-                  <div className="text-center">✓</div>
-                </div>
-
-                {ex.sets.map((set, setIdx) => {
-                  const setKey = `${exIdx}-${setIdx}`;
-                  const isCompleted = completedSets.has(setKey);
-                  return (
-                    <div
-                      key={set.id}
-                      className={`grid ${
-                        showWeight
-                          ? "grid-cols-[35px_64px_62px_62px_42px]"
-                          : "grid-cols-[35px_62px_62px_42px]"
-                      } gap-1.5 items-center rounded-md -mx-4 px-4 py-1 transition-colors`}
-                      style={{
-                        background: isCompleted
-                          ? "rgba(34,197,94,0.12)"
-                          : setIdx % 2 === 0
-                          ? "var(--color-surface-raised)"
-                          : "var(--color-surface)",
-                        borderLeft: isCompleted
-                          ? "2px solid var(--color-success)"
-                          : "none",
-                      }}
-                    >
-                      <button
-                        onClick={() => {
-                          setEditingSet({ exIdx, setIdx });
-                          setShowSetTypeModal(true);
-                        }}
-                        disabled={isCompleted}
-                        className={`font-medium text-center h-9 w-9 rounded-lg transition-all ${
-                          isCompleted
-                            ? "opacity-50 cursor-not-allowed"
-                            : "hover:opacity-80"
-                        }`}
-                        style={
-                          set.set_type === "warmup"
-                            ? {
-                                background: "rgba(234,179,8,0.15)",
-                                color: "#facc15",
-                                border: "1px solid rgba(234,179,8,0.3)",
-                              }
-                            : set.set_type === "failure"
-                            ? {
-                                background: "var(--color-accent-subtle)",
-                                color: "var(--color-accent)",
-                                border: "1px solid var(--color-accent-30)",
-                                boxShadow: "0 0 6px var(--color-accent-30)",
-                              }
-                            : set.set_type === "drop"
-                            ? {
-                                background: "rgba(59,130,246,0.15)",
-                                color: "#60a5fa",
-                                border: "1px solid rgba(59,130,246,0.3)",
-                              }
-                            : {
-                                background: "var(--color-surface-raised)",
-                                color: "var(--color-text)",
-                              }
-                        }
-                      >
-                        {getSetLabel(ex.sets, setIdx)}
-                      </button>
-
-                      {(() => {
-                        const lastSet = ex.last_performance?.[setIdx];
-                        return (
-                          <>
-                            {showWeight && (
-                              <input
-                                type="number"
-                                value={set.weight ?? ""}
-                                min="0"
-                                onChange={(e) => {
-                                  const v = e.target.value;
-                                  updateSet(
-                                    exIdx,
-                                    setIdx,
-                                    "weight",
-                                    v === "" ? null : Math.max(0, parseFloat(v))
-                                  );
-                                }}
-                                onWheel={(e) => e.target.blur()}
-                                disabled={isCompleted}
-                                placeholder={
-                                  lastSet?.weight ? String(lastSet.weight) : "—"
-                                }
-                                className="h-9 px-1 border border-border bg-surface-raised text-text rounded-lg text-xs text-center placeholder:text-muted disabled:opacity-40 disabled:cursor-not-allowed"
-                              />
-                            )}
-                            <input
-                              type="number"
-                              value={set.reps ?? ""}
-                              min="0"
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                updateSet(
-                                  exIdx,
-                                  setIdx,
-                                  "reps",
-                                  v === "" ? null : Math.max(0, parseInt(v))
-                                );
-                              }}
-                              onWheel={(e) => e.target.blur()}
-                              disabled={isCompleted}
-                              placeholder={
-                                lastSet?.reps ? String(lastSet.reps) : "—"
-                              }
-                              className="h-9 px-2 border border-border bg-surface-raised text-text rounded-lg text-sm text-center placeholder:text-muted disabled:opacity-40 disabled:cursor-not-allowed"
-                            />
-                          </>
-                        );
-                      })()}
-
-                      <input
-                        type="number"
-                        value={set.rir ?? ""}
-                        min="0"
-                        max="10"
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          updateSet(
-                            exIdx,
-                            setIdx,
-                            "rir",
-                            v === "" ? null : Math.max(0, parseInt(v))
-                          );
-                        }}
-                        onWheel={(e) => e.target.blur()}
-                        disabled={isCompleted}
-                        placeholder="—"
-                        className="h-9 px-2 border border-border bg-surface-raised text-text rounded-lg text-sm text-center placeholder:text-muted disabled:opacity-40 disabled:cursor-not-allowed"
-                      />
-
-                      <button
-                        onClick={() =>
-                          toggleSetCompletion(
-                            exIdx,
-                            setIdx,
-                            ex.rest_seconds || 120
-                          )
-                        }
-                        className="h-9 w-9 rounded-lg flex items-center justify-center transition-all"
-                        style={
-                          isCompleted
-                            ? {
-                                background: "var(--color-accent)",
-                                border: "2px solid var(--color-accent)",
-                                color: "#fff",
-                                boxShadow: "0 0 8px var(--color-accent-60)",
-                              }
-                            : {
-                                border: "2px solid var(--color-border)",
-                                color: "var(--color-muted)",
-                              }
-                        }
-                      >
-                        {isCompleted && "✓"}
-                      </button>
-                    </div>
-                  );
-                })}
-
-                <button
-                  onClick={() => {
-                    const updated = { ...session };
-                    const lastSet = ex.sets[ex.sets.length - 1] || {};
-                    updated.exercises[exIdx].sets.push({
-                      id: Date.now(),
-                      set_number: ex.sets.length + 1,
-                      set_type: "normal",
-                      weight: lastSet.weight || null,
-                      reps: lastSet.reps || null,
-                      rir: null,
-                    });
-                    setSession(updated);
-                  }}
-                  className="w-full py-2 mt-2 text-sm text-accent hover:text-accent-hover border border-dashed border-accent/40 rounded-lg transition-colors"
-                >
-                  + Add Set
-                </button>
-              </div>
-            </div>
-          );
-        })}
-
-        <button
-          onClick={() => {
-            setIsAddingExercise(true);
-            setShowExercisePicker(true);
-          }}
-          className="w-full py-3 mt-2 font-bold text-sm uppercase tracking-[0.2em] transition-all active:scale-[0.98]"
-          style={{
-            background: "var(--color-accent-subtle)",
-            border: "1px solid var(--color-accent-35)",
-            color: "var(--color-accent)",
-            clipPath:
-              "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
-            fontFamily: "monospace",
-          }}
-        >
-          + Add Exercise
-        </button>
-      </div>
-
-      {/* Bottom Actions */}
-      <div className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border p-4 pb-safe">
-        <button
-          onClick={handleFinish}
-          className="w-full py-3 active:scale-[0.98] font-bold tracking-[0.2em] uppercase text-sm transition-all"
-          style={{
-            background: "var(--color-accent)",
-            color: "#000",
-            border: "1px solid var(--color-accent-80)",
-            clipPath:
-              "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
-            fontFamily: "monospace",
-          }}
-        >
-          Finish Workout
-        </button>
+        {reorderMode && (
+          <button
+            onClick={() => setReorderMode(false)}
+            className="w-full py-3 mt-4 font-bold text-sm uppercase tracking-[0.2em] transition-all active:scale-[0.98]"
+            style={{
+              background: "var(--color-accent)",
+              color: "#000",
+              clipPath:
+                "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+              fontFamily: "monospace",
+            }}
+          >
+            Done Reordering
+          </button>
+        )}
       </div>
 
       <RestTimerModal
@@ -1068,6 +957,14 @@ export default function ActiveWorkout() {
           )}
         />
       )}
+      <ReorderExercisesModal
+        isOpen={showReorderModal}
+        onClose={() => setShowReorderModal(false)}
+        exercises={session.exercises}
+        onSave={(reordered) => {
+          setSession({ ...session, exercises: reordered });
+        }}
+      />
     </div>
   );
 }
