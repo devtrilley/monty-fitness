@@ -662,6 +662,129 @@ def delete_routine(user, routine_id):
 
 
 # ============================================
+# TEMPLATE ROUTES
+# ============================================
+@app.route("/api/routines/templates", methods=["GET"])
+@jwt_required_custom
+def get_template_routines(user):
+    admin = User.query.filter_by(is_admin=True).first()
+    if not admin:
+        return jsonify({"templates": [], "creator": None}), 200
+
+    folders = RoutineFolder.query.filter_by(user_id=admin.id).order_by(RoutineFolder.created_at).all()
+    result = []
+    for folder in folders:
+        folder_routines = Routine.query.filter_by(user_id=admin.id, folder_id=folder.id).all()
+        routines_data = []
+        for r in folder_routines:
+            d = r.to_dict(include_exercises=True)
+            exs = [re.exercise for re in r.routine_exercises if re.exercise]
+            d["exercise_preview"] = ", ".join(ex.name for ex in exs)
+            d["exercise_images"] = [ex.image_url for ex in exs[:4] if ex.image_url]
+            d["exercise_count"] = len(r.routine_exercises)
+            routines_data.append(d)
+        result.append({
+            "folder_id": folder.id,
+            "folder_name": folder.name,
+            "routines": routines_data,
+        })
+
+    return jsonify({
+        "templates": result,
+        "creator": {"username": admin.username, "id": admin.id},
+    }), 200
+
+
+@app.route("/api/routines/templates/<int:routine_id>/save", methods=["POST"])
+@jwt_required_custom
+def save_template_routine(user, routine_id):
+    admin = User.query.filter_by(is_admin=True).first()
+    source = Routine.query.filter_by(id=routine_id, user_id=admin.id).first() if admin else None
+    if not source:
+        return jsonify({"error": "Template not found"}), 404
+
+    data = request.get_json() or {}
+    new_routine = Routine(
+        user_id=user.id,
+        name=source.name,
+        description=source.description,
+        icon=source.icon,
+        folder_id=data.get("folder_id"),
+    )
+    db.session.add(new_routine)
+    db.session.flush()
+
+    for re in source.routine_exercises:
+        new_re = RoutineExercise(
+            routine_id=new_routine.id,
+            exercise_id=re.exercise_id,
+            order_index=re.order_index,
+            planned_sets=re.planned_sets,
+            rest_seconds=re.rest_seconds,
+            notes=re.notes,
+        )
+        db.session.add(new_re)
+        db.session.flush()
+        for rs in re.sets:
+            db.session.add(RoutineSet(
+                routine_exercise_id=new_re.id,
+                set_number=rs.set_number,
+                set_type=rs.set_type,
+                weight=rs.weight,
+                reps=rs.reps,
+            ))
+
+    db.session.commit()
+    return jsonify({"message": "Routine saved", "routine": new_routine.to_dict()}), 201
+
+
+@app.route("/api/routines/templates/folder/<int:folder_id>/save", methods=["POST"])
+@jwt_required_custom
+def save_template_folder(user, folder_id):
+    admin = User.query.filter_by(is_admin=True).first()
+    source_folder = RoutineFolder.query.filter_by(id=folder_id, user_id=admin.id).first() if admin else None
+    if not source_folder:
+        return jsonify({"error": "Template folder not found"}), 404
+
+    new_folder = RoutineFolder(user_id=user.id, name=source_folder.name)
+    db.session.add(new_folder)
+    db.session.flush()
+
+    for source in Routine.query.filter_by(user_id=admin.id, folder_id=folder_id).all():
+        new_routine = Routine(
+            user_id=user.id,
+            name=source.name,
+            description=source.description,
+            icon=source.icon,
+            folder_id=new_folder.id,
+        )
+        db.session.add(new_routine)
+        db.session.flush()
+        for re in source.routine_exercises:
+            new_re = RoutineExercise(
+                routine_id=new_routine.id,
+                exercise_id=re.exercise_id,
+                order_index=re.order_index,
+                planned_sets=re.planned_sets,
+                rest_seconds=re.rest_seconds,
+                notes=re.notes,
+            )
+            db.session.add(new_re)
+            db.session.flush()
+            for rs in re.sets:
+                db.session.add(RoutineSet(
+                    routine_exercise_id=new_re.id,
+                    set_number=rs.set_number,
+                    set_type=rs.set_type,
+                    weight=rs.weight,
+                    reps=rs.reps,
+                ))
+
+    db.session.commit()
+    return jsonify({"message": "Folder saved", "folder": new_folder.to_dict()}), 201
+
+
+# ============================================
 # WORKOUT ROUTES
 # ============================================
 
@@ -1870,12 +1993,20 @@ def seed_admin():
     print("✅ Admin account created: admin@monty / monty123")
 
 
+@app.cli.command("seed-templates")
+def seed_templates_cmd():
+    """Seed admin template routines"""
+    from seed_data.templates import seed_templates
+    seed_templates(db)
+    print("Template routines seeded!")
+
 @app.cli.command("fresh")
 def fresh():
     """Nuke and reseed the entire database"""
     from seed_data.exercises import seed_exercises
     from seed_data.routines import seed_routines
     from seed_data.challenges import seed_challenges
+    from seed_data.templates import seed_templates
 
     print("💣 Dropping all tables...")
     db.drop_all()
@@ -1920,7 +2051,8 @@ def fresh():
     admin.is_admin = True
     db.session.add(admin)
     db.session.commit()
-
+    print("📋 Seeding template routines...")
+    seed_templates(db)
     print("✅ Done! Fresh database ready.")
 
 

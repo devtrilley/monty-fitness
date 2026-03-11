@@ -4,7 +4,7 @@ import { getWorkoutHistory, getAnalyticsSummary } from "../utils/api";
 import WorkoutHistoryCard from "../components/WorkoutHistoryCard";
 import { useNavigate } from "react-router-dom";
 import TopBar from "../components/TopBar";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, BookOpen } from "lucide-react";
 
 function DashboardSkeleton() {
   return (
@@ -364,7 +364,7 @@ export default function Dashboard() {
         </button>
         <button
           onClick={() => navigate("/analytics")}
-          className="w-full py-3 mb-8 text-sm uppercase font-medium transition-all flex items-center justify-center gap-2 active:opacity-70"
+          className="w-full py-3 mb-3 text-sm uppercase font-medium transition-all flex items-center justify-center gap-2 active:opacity-70"
           style={{
             background: "transparent",
             color: "var(--color-muted)",
@@ -375,6 +375,20 @@ export default function Dashboard() {
         >
           <BarChart3 size={14} />
           View Analytics
+        </button>
+        <button
+          onClick={() => navigate("/browse-routines")}
+          className="w-full py-3 mb-8 text-sm uppercase font-medium transition-all flex items-center justify-center gap-2 active:opacity-70"
+          style={{
+            background: "transparent",
+            color: "var(--color-muted)",
+            border: "1px solid var(--color-border)",
+            clipPath: chamfer(8),
+            letterSpacing: "0.15em",
+          }}
+        >
+          <BookOpen size={14} />
+          Browse Routines
         </button>
 
         {/* Recent Activity */}

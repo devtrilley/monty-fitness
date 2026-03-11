@@ -288,6 +288,24 @@ export const getChallengeProgress = async () => {
 };
 
 // ======================
+// TEMPLATE API
+// ======================
+export const getTemplateRoutines = async () => {
+  const { data } = await api.get("/routines/templates");
+  return data;
+};
+
+export const saveTemplateRoutine = async (routineId, folderId = null) => {
+  const { data } = await api.post(`/routines/templates/${routineId}/save`, { folder_id: folderId });
+  return data;
+};
+
+export const saveTemplateFolder = async (folderId) => {
+  const { data } = await api.post(`/routines/templates/folder/${folderId}/save`);
+  return data;
+};
+
+// ======================
 // ADMIN API
 // ======================
 export const adminGetUsers = async () => {

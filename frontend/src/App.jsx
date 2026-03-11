@@ -23,6 +23,7 @@ import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import Legal from "./pages/Legal";
+import CommunityRoutines from "./pages/CommunityRoutines";
 import BottomNav from "./components/BottomNav";
 import TronToaster from "./components/TronToaster";
 
@@ -145,6 +146,14 @@ function AppRoutes() {
               }
             />
             <Route path="/legal" element={<Legal />} />
+            <Route
+              path="/browse-routines"
+              element={
+                <ProtectedRoute>
+                  <CommunityRoutines />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </motion.div>
       </AnimatePresence>
