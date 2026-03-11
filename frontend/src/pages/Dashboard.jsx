@@ -84,7 +84,7 @@ export default function Dashboard() {
       "NO DAYS OFF",
     ];
     const chosen = greetings[Math.floor(Math.random() * greetings.length)];
-    const target = `${chosen}, ${user.username.toUpperCase()}`;
+    const target = `${chosen}, ${user.username.toUpperCase()}!`;
     let i = 0;
     setTypedText("");
     const interval = setInterval(() => {

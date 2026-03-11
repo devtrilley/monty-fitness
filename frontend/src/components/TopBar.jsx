@@ -17,7 +17,7 @@ export default function TopBar({ title, onRefresh, onBack }) {
         {onBack ? (
           <button
             onClick={onBack}
-            className="w-9 h-9 flex items-center justify-center text-muted hover:text-accent transition-colors"
+            className="w-9 h-9 flex items-center justify-center text-muted hover:text-accent transition-colors cursor-pointer"
             style={{
               border: "1px solid var(--color-border)",
               clipPath:
@@ -42,7 +42,7 @@ export default function TopBar({ title, onRefresh, onBack }) {
         ) : (
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="w-9 h-9 flex items-center justify-center text-muted hover:text-accent transition-all"
+            className="w-9 h-9 flex items-center justify-center text-muted hover:text-accent transition-all cursor-pointer"
             style={{
               border: "1px solid var(--color-border)",
               clipPath:
@@ -67,7 +67,7 @@ export default function TopBar({ title, onRefresh, onBack }) {
         {onRefresh ? (
           <button
             onClick={onRefresh}
-            className="text-xs px-3 py-1.5 text-accent font-medium rounded-lg transition-all hover:glow-sm"
+            className="text-xs px-3 py-1.5 text-accent font-medium rounded-lg transition-all hover:glow-sm cursor-pointer"
             style={{
               border: "1px solid var(--color-accent-40)",
               background: "var(--color-accent-subtle)",

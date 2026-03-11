@@ -23,7 +23,7 @@ def seed_routines(db):
         user_id=mike.id,
         name="Push Day 💪",
         description="Chest, Shoulders, Triceps",
-        icon="💪"
+        icon="💪",
     )
     db.session.add(push_routine)
     db.session.flush()
@@ -38,7 +38,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 205, "reps": 6},
                 {"type": "normal", "weight": 225, "reps": 5},
                 {"type": "normal", "weight": 225, "reps": 5},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Incline Bench Press", "Dumbbell"),
@@ -47,7 +47,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 70, "reps": 10},
                 {"type": "normal", "weight": 75, "reps": 8},
                 {"type": "normal", "weight": 80, "reps": 6},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Chest Fly", "Dumbbell"),
@@ -56,16 +56,16 @@ def seed_routines(db):
                 {"type": "normal", "weight": 35, "reps": 12},
                 {"type": "normal", "weight": 35, "reps": 12},
                 {"type": "normal", "weight": 35, "reps": 12},
-            ]
+            ],
         },
         {
-            "exercise": find_exercise("Shoulder Press", "Dumbbell"),
+            "exercise": find_exercise("Overhead Press", "Dumbbell"),
             "rest": 120,
             "sets": [
                 {"type": "normal", "weight": 50, "reps": 10},
                 {"type": "normal", "weight": 55, "reps": 8},
                 {"type": "normal", "weight": 60, "reps": 6},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Lateral Raise", "Dumbbell"),
@@ -74,7 +74,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 20, "reps": 15},
                 {"type": "normal", "weight": 20, "reps": 15},
                 {"type": "normal", "weight": 20, "reps": 15},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Tricep Pushdown", "Cable"),
@@ -83,7 +83,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 60, "reps": 12},
                 {"type": "normal", "weight": 70, "reps": 10},
                 {"type": "normal", "weight": 80, "reps": 8},
-            ]
+            ],
         },
     ]
 
@@ -105,7 +105,7 @@ def seed_routines(db):
                     set_number=set_num,
                     set_type=set_data["type"],
                     weight=set_data["weight"],
-                    reps=set_data["reps"]
+                    reps=set_data["reps"],
                 )
                 db.session.add(routine_set)
 
@@ -114,7 +114,7 @@ def seed_routines(db):
         user_id=mike.id,
         name="Pull Day 🔙",
         description="Back, Biceps, Rear Delts",
-        icon="🔙"
+        icon="🔙",
     )
     db.session.add(pull_routine)
     db.session.flush()
@@ -129,7 +129,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 315, "reps": 5},
                 {"type": "normal", "weight": 365, "reps": 3},
                 {"type": "normal", "weight": 405, "reps": 1},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Pull Up", "Bodyweight"),
@@ -139,16 +139,16 @@ def seed_routines(db):
                 {"type": "normal", "weight": 0, "reps": 8},
                 {"type": "normal", "weight": 0, "reps": 6},
                 {"type": "failure", "weight": 0, "reps": None},
-            ]
+            ],
         },
         {
-            "exercise": find_exercise("Row", "Barbell"),
+            "exercise": find_exercise("Bent Over Row", "Barbell"),
             "rest": 120,
             "sets": [
                 {"type": "normal", "weight": 135, "reps": 10},
                 {"type": "normal", "weight": 155, "reps": 8},
                 {"type": "normal", "weight": 175, "reps": 6},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Lat Pulldown", "Cable"),
@@ -157,7 +157,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 140, "reps": 12},
                 {"type": "normal", "weight": 160, "reps": 10},
                 {"type": "normal", "weight": 180, "reps": 8},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Face Pull", "Cable"),
@@ -166,16 +166,16 @@ def seed_routines(db):
                 {"type": "normal", "weight": 60, "reps": 15},
                 {"type": "normal", "weight": 60, "reps": 15},
                 {"type": "normal", "weight": 60, "reps": 15},
-            ]
+            ],
         },
         {
-            "exercise": find_exercise("Curl", "Barbell"),
+            "exercise": find_exercise("Bicep Curl", "Barbell"),
             "rest": 90,
             "sets": [
                 {"type": "normal", "weight": 60, "reps": 10},
                 {"type": "normal", "weight": 70, "reps": 8},
                 {"type": "normal", "weight": 80, "reps": 6},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Hammer Curl", "Dumbbell"),
@@ -184,7 +184,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 35, "reps": 12},
                 {"type": "normal", "weight": 35, "reps": 12},
                 {"type": "normal", "weight": 35, "reps": 12},
-            ]
+            ],
         },
     ]
 
@@ -206,7 +206,7 @@ def seed_routines(db):
                     set_number=set_num,
                     set_type=set_data["type"],
                     weight=set_data["weight"],
-                    reps=set_data["reps"]
+                    reps=set_data["reps"],
                 )
                 db.session.add(routine_set)
 
@@ -215,7 +215,7 @@ def seed_routines(db):
         user_id=mike.id,
         name="Leg Day 🦵",
         description="Quads, Hamstrings, Glutes, Calves",
-        icon="🦵"
+        icon="🦵",
     )
     db.session.add(leg_routine)
     db.session.flush()
@@ -230,7 +230,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 225, "reps": 6},
                 {"type": "normal", "weight": 275, "reps": 5},
                 {"type": "normal", "weight": 275, "reps": 5},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Romanian Deadlift", "Barbell"),
@@ -239,7 +239,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 135, "reps": 10},
                 {"type": "normal", "weight": 185, "reps": 8},
                 {"type": "normal", "weight": 205, "reps": 8},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Leg Press", "Machine"),
@@ -248,16 +248,16 @@ def seed_routines(db):
                 {"type": "normal", "weight": 360, "reps": 12},
                 {"type": "normal", "weight": 450, "reps": 10},
                 {"type": "normal", "weight": 540, "reps": 8},
-            ]
+            ],
         },
         {
-            "exercise": find_exercise("Leg Curl", "Machine"),
+            "exercise": find_exercise("Lying Leg Curl", "Machine"),
             "rest": 90,
             "sets": [
                 {"type": "normal", "weight": 90, "reps": 12},
                 {"type": "normal", "weight": 100, "reps": 10},
                 {"type": "normal", "weight": 110, "reps": 8},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Leg Extension", "Machine"),
@@ -266,16 +266,16 @@ def seed_routines(db):
                 {"type": "normal", "weight": 120, "reps": 12},
                 {"type": "normal", "weight": 130, "reps": 10},
                 {"type": "normal", "weight": 140, "reps": 8},
-            ]
+            ],
         },
         {
-            "exercise": find_exercise("Calf Raise", "Machine"),
+            "exercise": find_exercise("Standing Calf Raise", "Machine"),
             "rest": 60,
             "sets": [
                 {"type": "normal", "weight": 180, "reps": 15},
                 {"type": "normal", "weight": 200, "reps": 12},
                 {"type": "normal", "weight": 220, "reps": 10},
-            ]
+            ],
         },
     ]
 
@@ -297,7 +297,7 @@ def seed_routines(db):
                     set_number=set_num,
                     set_type=set_data["type"],
                     weight=set_data["weight"],
-                    reps=set_data["reps"]
+                    reps=set_data["reps"],
                 )
                 db.session.add(routine_set)
 
@@ -310,7 +310,7 @@ def seed_routines(db):
         user_id=sara.id,
         name="Upper Body Flow 🤸",
         description="Pull-ups, Dips, Push-ups",
-        icon="🤸"
+        icon="🤸",
     )
     db.session.add(upper_routine)
     db.session.flush()
@@ -325,7 +325,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 0, "reps": 8},
                 {"type": "normal", "weight": 0, "reps": 8},
                 {"type": "failure", "weight": 0, "reps": None},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Dips", "Bodyweight"),
@@ -335,7 +335,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 0, "reps": 10},
                 {"type": "normal", "weight": 0, "reps": 10},
                 {"type": "failure", "weight": 0, "reps": None},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Push Up", "Bodyweight"),
@@ -344,7 +344,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 0, "reps": 20},
                 {"type": "normal", "weight": 0, "reps": 20},
                 {"type": "normal", "weight": 0, "reps": 20},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Diamond Push Up", "Bodyweight"),
@@ -353,7 +353,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 0, "reps": 12},
                 {"type": "normal", "weight": 0, "reps": 12},
                 {"type": "normal", "weight": 0, "reps": 12},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Hanging Leg Raise", "Bodyweight"),
@@ -362,7 +362,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 0, "reps": 15},
                 {"type": "normal", "weight": 0, "reps": 15},
                 {"type": "normal", "weight": 0, "reps": 15},
-            ]
+            ],
         },
     ]
 
@@ -384,7 +384,7 @@ def seed_routines(db):
                     set_number=set_num,
                     set_type=set_data["type"],
                     weight=set_data["weight"],
-                    reps=set_data["reps"]
+                    reps=set_data["reps"],
                 )
                 db.session.add(routine_set)
 
@@ -393,7 +393,7 @@ def seed_routines(db):
         user_id=sara.id,
         name="Lower Body Power 🏋️",
         description="Squats, Lunges, Glute Work",
-        icon="🏋️"
+        icon="🏋️",
     )
     db.session.add(lower_routine)
     db.session.flush()
@@ -407,7 +407,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 0, "reps": 20},
                 {"type": "normal", "weight": 0, "reps": 20},
                 {"type": "normal", "weight": 0, "reps": 20},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Jump Squat", "Bodyweight"),
@@ -416,7 +416,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 0, "reps": 15},
                 {"type": "normal", "weight": 0, "reps": 15},
                 {"type": "normal", "weight": 0, "reps": 15},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Bulgarian Split Squat", "Bodyweight"),
@@ -425,7 +425,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 0, "reps": 12},
                 {"type": "normal", "weight": 0, "reps": 12},
                 {"type": "normal", "weight": 0, "reps": 12},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Walking Lunge", "Bodyweight"),
@@ -434,7 +434,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 0, "reps": 20},
                 {"type": "normal", "weight": 0, "reps": 20},
                 {"type": "normal", "weight": 0, "reps": 20},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Glute Bridge", "Bodyweight"),
@@ -443,7 +443,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 0, "reps": 20},
                 {"type": "normal", "weight": 0, "reps": 20},
                 {"type": "normal", "weight": 0, "reps": 20},
-            ]
+            ],
         },
         {
             "exercise": find_exercise("Calf Raise", "Bodyweight"),
@@ -452,7 +452,7 @@ def seed_routines(db):
                 {"type": "normal", "weight": 0, "reps": 25},
                 {"type": "normal", "weight": 0, "reps": 25},
                 {"type": "normal", "weight": 0, "reps": 25},
-            ]
+            ],
         },
     ]
 
@@ -474,7 +474,7 @@ def seed_routines(db):
                     set_number=set_num,
                     set_type=set_data["type"],
                     weight=set_data["weight"],
-                    reps=set_data["reps"]
+                    reps=set_data["reps"],
                 )
                 db.session.add(routine_set)
 

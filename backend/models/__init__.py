@@ -13,6 +13,8 @@ class User(db.Model):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(80), nullable=True)
+    last_name = db.Column(db.String(80), nullable=True)
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -28,6 +30,7 @@ class User(db.Model):
     best_weekly_streak = db.Column(db.Integer, default=0)
     current_weekly_streak = db.Column(db.Integer, default=0)
     last_workout_week = db.Column(db.String(10), nullable=True)
+    display_name_preference = db.Column(db.String(20), default="username")
 
     custom_exercises = db.relationship(
         "Exercise",
@@ -51,6 +54,8 @@ class User(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
             "username": self.username,
             "email": self.email,
             "bio": self.bio,
@@ -62,6 +67,7 @@ class User(db.Model):
             "best_weekly_streak": self.best_weekly_streak,
             "is_admin": self.is_admin,
             "is_active": self.is_active,
+            "display_name_preference": self.display_name_preference,
         }
 
 

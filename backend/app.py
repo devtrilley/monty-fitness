@@ -177,11 +177,20 @@ def register():
 
     if (
         not data
+        or not data.get("first_name")
+        or not data.get("last_name")
         or not data.get("username")
         or not data.get("email")
         or not data.get("password")
     ):
-        return jsonify({"error": "Username, email, and password required"}), 400
+        return (
+            jsonify(
+                {
+                    "error": "First name, last name, username, email, and password required"
+                }
+            ),
+            400,
+        )
 
     if User.query.filter_by(username=data["username"]).first():
         return jsonify({"error": "Username already exists"}), 409
@@ -189,7 +198,13 @@ def register():
     if User.query.filter_by(email=data["email"]).first():
         return jsonify({"error": "Email already exists"}), 409
 
-    user = User(username=data["username"], email=data["email"])
+    user = User(
+        first_name=data["first_name"].strip(),
+        last_name=data["last_name"].strip(),
+        username=data["username"],
+        email=data["email"],
+        display_name_preference=data.get("display_name_preference", "username"),
+    )
     user.set_password(data["password"])
 
     db.session.add(user)
@@ -218,9 +233,16 @@ def login():
     data = request.get_json()
 
     if not data or not data.get("email") or not data.get("password"):
-        return jsonify({"error": "Email and password required"}), 400
+        return jsonify({"error": "Email or username and password required"}), 400
 
-    user = User.query.filter_by(email=data["email"]).first()
+    identifier = data["email"].strip()
+
+    user = User.query.filter(
+        or_(
+            func.lower(User.email) == identifier.lower(),
+            func.lower(User.username) == identifier.lower(),
+        )
+    ).first()
     if not user or not user.check_password(data["password"]):
         return jsonify({"error": "Invalid credentials"}), 401
     if user.is_admin:
@@ -305,6 +327,10 @@ def get_me(user):
 def update_profile(user):
     data = request.get_json()
 
+    if "first_name" in data:
+        user.first_name = data["first_name"].strip()
+    if "last_name" in data:
+        user.last_name = data["last_name"].strip()
     if "bio" in data:
         user.bio = data["bio"]
     if "profile_photo_url" in data:

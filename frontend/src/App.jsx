@@ -8,8 +8,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion"; // eslint-disable-line no-unused-vars
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Workouts from "./pages/Workouts";
@@ -31,9 +30,13 @@ import TronToaster from "./components/TronToaster";
 function AppRoutes() {
   const location = useLocation();
   // Don't show BottomNav on auth/admin pages
-  const hideNav = ["/login", "/register", "/admin-login", "/admin"].includes(
-    location.pathname
-  );
+  const hideNav = [
+    "/auth",
+    "/login",
+    "/register",
+    "/admin-login",
+    "/admin",
+  ].includes(location.pathname);
   return (
     <>
       <AnimatePresence mode="wait">
@@ -45,8 +48,12 @@ function AppRoutes() {
           transition={{ duration: 0.18, ease: "easeOut" }}
         >
           <Routes location={location}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/login" element={<Navigate to="/auth" replace />} />
+            <Route
+              path="/register"
+              element={<Navigate to="/auth?mode=register" replace />}
+            />
             <Route
               path="/dashboard"
               element={

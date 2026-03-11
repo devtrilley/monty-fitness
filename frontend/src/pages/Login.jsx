@@ -6,7 +6,7 @@ import ChamferButton from "../components/ChamferButton";
 import { toast } from "../components/TronToaster";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data, ok } = await login(email, password);
+      const { data, ok } = await login(identifier, password);
       if (ok) {
         setUser(data.user);
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -76,19 +76,19 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label
-                htmlFor="email"
+                htmlFor="identifier"
                 className="block text-sm font-medium text-muted mb-2"
               >
-                Email
+                Email or Username
               </label>
               <input
-                id="email"
-                type="email"
+                id="identifier"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 className="w-full px-4 py-3.5 bg-surface-raised border border-border rounded-xl text-base text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
-                placeholder="you@example.com"
+                placeholder="you@example.com or montyuser"
               />
             </div>
 
@@ -110,11 +110,7 @@ export default function Login() {
               />
             </div>
 
-            <ChamferButton
-              type="submit"
-              disabled={loading}
-              className="mt-2"
-            >
+            <ChamferButton type="submit" disabled={loading} className="mt-2">
               {loading ? "Logging in..." : "Log In"}
             </ChamferButton>
           </form>

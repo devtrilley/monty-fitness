@@ -54,7 +54,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         localStorage.removeItem("access_token");
-        window.location.href = "/login";
+        window.location.href = "/auth";
         return Promise.reject(refreshError);
       }
     }
@@ -77,12 +77,22 @@ export const getAccessToken = () => {
 
 // Auth API
 // Auth API
-export const register = async (username, email, password) => {
+export const register = async (
+  firstName,
+  lastName,
+  username,
+  email,
+  password,
+  displayNamePref
+) => {
   try {
     const { data } = await api.post("/auth/register", {
+      first_name: firstName,
+      last_name: lastName,
       username,
       email,
       password,
+      display_name_preference: displayNamePref || "username",
     });
     setAccessToken(data.access_token);
     return { data, ok: true };
@@ -117,8 +127,15 @@ export const getCurrentUser = async () => {
   return data;
 };
 
-export const updateProfile = async (bio, profilePhotoUrl) => {
+export const updateProfile = async (
+  firstName,
+  lastName,
+  bio,
+  profilePhotoUrl
+) => {
   const { data } = await api.put("/auth/me", {
+    first_name: firstName,
+    last_name: lastName,
     bio,
     profile_photo_url: profilePhotoUrl,
   });

@@ -6,6 +6,8 @@ import ChamferButton from "../components/ChamferButton";
 import { toast } from "../components/TronToaster";
 
 export default function Register() {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,7 +19,13 @@ export default function Register() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data, ok } = await register(username, email, password);
+      const { data, ok } = await register(
+        firstName,
+        lastName,
+        username,
+        email,
+        password
+      );
       if (ok) {
         setUser(data.user);
         navigate("/dashboard");
@@ -76,6 +84,44 @@ export default function Register() {
           </div>
 
           <div className="space-y-5">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label
+                  htmlFor="firstName"
+                  className="block text-sm font-medium text-muted mb-2"
+                >
+                  First Name
+                </label>
+                <input
+                  id="firstName"
+                  type="text"
+                  required
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full px-4 py-3.5 bg-surface-raised border border-border rounded-xl text-base text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                  placeholder="Tom"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="lastName"
+                  className="block text-sm font-medium text-muted mb-2"
+                >
+                  Last Name
+                </label>
+                <input
+                  id="lastName"
+                  type="text"
+                  required
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full px-4 py-3.5 bg-surface-raised border border-border rounded-xl text-base text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                  placeholder="Rilley"
+                />
+              </div>
+            </div>
+
             <div>
               <label
                 htmlFor="username"

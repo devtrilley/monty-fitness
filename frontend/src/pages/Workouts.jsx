@@ -14,6 +14,7 @@ import {
 import toast from "react-hot-toast";
 import TopBar from "../components/TopBar";
 import ChamferButton from "../components/ChamferButton";
+import { FolderPlus, FilePlus2 } from "lucide-react";
 
 function WorkoutsSkeleton() {
   return (
@@ -447,7 +448,8 @@ export default function Workouts() {
               fontFamily: "monospace",
             }}
           >
-            📁 Folder
+            <FolderPlus size={15} />
+            New Folder
           </button>
           <button
             onClick={() => navigate("/workouts/create")}
@@ -461,7 +463,8 @@ export default function Workouts() {
               fontFamily: "monospace",
             }}
           >
-            📋 Routine
+            <FilePlus2 size={15} />
+            New Routine
           </button>
         </div>
 

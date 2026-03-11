@@ -36,7 +36,7 @@ export default function ChamferButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`w-full font-bold text-sm uppercase tracking-[0.2em] transition-all active:scale-[0.98] disabled:opacity-40 ${padding} ${className}`}
+      className={`w-full font-bold text-sm uppercase tracking-[0.2em] disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed ${padding} ${className}`}
       style={styles[variant]}
     >
       {children}
