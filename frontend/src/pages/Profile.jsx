@@ -1,10 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { updateProfile, getWorkoutHistory } from "../utils/api";
+import {
+  updateProfile,
+  getWorkoutHistory,
+  getPresignedUrl,
+  uploadToS3,
+} from "../utils/api";
 import WorkoutHistoryCard from "../components/WorkoutHistoryCard";
 import TopBar from "../components/TopBar";
 import ChamferButton from "../components/ChamferButton";
+import { toast } from "../components/TronToaster";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -13,8 +19,17 @@ export default function Profile() {
   const [lastName, setLastName] = useState(user?.last_name || "");
   const [bio, setBio] = useState(user?.bio || "");
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
   const [workouts, setWorkouts] = useState([]);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const photoInputRef = useRef(null);
+
+  const MAX_PROFILE_PHOTO_SIZE = 5 * 1024 * 1024;
+  const ALLOWED_IMAGE_TYPES = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+  ];
 
   useEffect(() => {
     const fetchWorkouts = async () => {
@@ -28,9 +43,59 @@ export default function Profile() {
     fetchWorkouts();
   }, []);
 
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Use JPG, PNG, or WEBP.");
+      if (photoInputRef.current) {
+        photoInputRef.current.value = "";
+      }
+      return;
+    }
+
+    if (file.size > MAX_PROFILE_PHOTO_SIZE) {
+      toast.error("Profile photo must be 5 MB or smaller.");
+      if (photoInputRef.current) {
+        photoInputRef.current.value = "";
+      }
+      return;
+    }
+
+    setPhotoUploading(true);
+
+    try {
+      const { presigned_url, final_url } = await getPresignedUrl(
+        file.type,
+        "profile"
+      );
+
+      await uploadToS3(presigned_url, file);
+
+      const updatedUser = await updateProfile(
+        firstName,
+        lastName,
+        bio,
+        final_url
+      );
+
+      setUser(updatedUser.user);
+      toast.success("Profile photo updated.");
+    } catch (err) {
+      console.error("Photo upload error:", err);
+      toast.error("Could not update profile photo.");
+    } finally {
+      setPhotoUploading(false);
+      if (photoInputRef.current) {
+        photoInputRef.current.value = "";
+      }
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
-    setMessage("");
+
     try {
       const updatedUser = await updateProfile(
         firstName,
@@ -39,9 +104,10 @@ export default function Profile() {
         user?.profile_photo_url
       );
       setUser(updatedUser.user);
-      setMessage("success");
-    } catch {
-      setMessage("error");
+      toast.success("Profile updated.");
+    } catch (err) {
+      console.error("Profile save error:", err);
+      toast.error("Could not save profile.");
     } finally {
       setSaving(false);
     }
@@ -61,16 +127,67 @@ export default function Profile() {
               "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
           }}
         >
-          <div
-            className="w-16 h-16 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0"
-            style={{
-              borderRadius: "4px",
-              background: "var(--color-accent)",
-              boxShadow: "0 0 16px var(--color-accent-60)",
-            }}
+          <button
+            onClick={() => photoInputRef.current?.click()}
+            className="relative w-16 h-16 flex-shrink-0"
+            style={{ borderRadius: "4px" }}
           >
-            {user?.username?.charAt(0).toUpperCase()}
-          </div>
+            {user?.profile_photo_url ? (
+              <img
+                src={user.profile_photo_url}
+                alt="Profile"
+                className="w-16 h-16 object-cover"
+                style={{
+                  borderRadius: "4px",
+                  boxShadow: "0 0 16px var(--color-accent-60)",
+                }}
+              />
+            ) : (
+              <div
+                className="w-16 h-16 flex items-center justify-center text-black text-2xl font-bold"
+                style={{
+                  borderRadius: "4px",
+                  background: "var(--color-accent)",
+                  boxShadow: "0 0 16px var(--color-accent-60)",
+                }}
+              >
+                {user?.username?.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div
+              className="absolute top-0 right-0 w-5 h-5 flex items-center justify-center"
+              style={{
+                background: "rgba(0,0,0,0.55)",
+                clipPath:
+                  "polygon(3px 0%, 100% 0%, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0% 100%, 0% 3px)",
+              }}
+            >
+              {photoUploading ? (
+                <span className="text-black text-[9px] font-bold">…</span>
+              ) : (
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--color-accent)"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              )}
+            </div>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoUpload}
+            />
+          </button>
           <div>
             <p className="font-semibold text-text text-lg">
               {user?.first_name || user?.last_name
@@ -128,14 +245,6 @@ export default function Profile() {
             className="w-full px-3 py-2.5 bg-surface-raised border border-border rounded-lg text-sm text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent resize-none transition-all"
             placeholder="Tell us about yourself..."
           />
-          {message === "success" && (
-            <p className="text-sm text-success mt-2">Profile updated!</p>
-          )}
-          {message === "error" && (
-            <p className="text-sm text-danger mt-2">
-              Failed to update profile.
-            </p>
-          )}
           <ChamferButton
             onClick={handleSave}
             disabled={saving}

@@ -1,12 +1,22 @@
+import { createPortal } from "react-dom";
+
 const chamfer = (s = 8) =>
   `polygon(${s}px 0%, 100% 0%, 100% calc(100% - ${s}px), calc(100% - ${s}px) 100%, 0% 100%, 0% ${s}px)`;
 
 export default function ConfirmModal({
-  isOpen, onClose, onConfirm, title, message, subMessage,
-  cancelText = "Cancel", confirmText = "Confirm", confirmDanger = false, children,
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  subMessage,
+  cancelText = "Cancel",
+  confirmText = "Confirm",
+  confirmDanger = false,
+  children,
 }) {
   if (!isOpen) return null;
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 flex items-center justify-center z-[999] px-4 fade-in"
       style={{ background: "rgba(0,0,0,0.88)" }}
@@ -17,7 +27,8 @@ export default function ConfirmModal({
           background: "var(--color-surface)",
           border: "1px solid var(--color-border-bright)",
           clipPath: chamfer(10),
-          boxShadow: "0 0 48px rgba(0,0,0,0.95), 0 0 24px var(--color-accent-15)",
+          boxShadow:
+            "0 0 48px rgba(0,0,0,0.95), 0 0 24px var(--color-accent-15)",
         }}
       >
         <h2
@@ -26,11 +37,20 @@ export default function ConfirmModal({
         >
           {title}
         </h2>
-        {children ? children : (
+        {children ? (
+          children
+        ) : (
           <>
-            <p className="text-sm mb-2" style={{ color: "var(--color-muted)" }}>{message}</p>
+            <p className="text-sm mb-2" style={{ color: "var(--color-muted)" }}>
+              {message}
+            </p>
             {subMessage && (
-              <p className="text-sm mb-4" style={{ color: "var(--color-muted)" }}>{subMessage}</p>
+              <p
+                className="text-sm mb-4"
+                style={{ color: "var(--color-muted)" }}
+              >
+                {subMessage}
+              </p>
             )}
           </>
         )}
@@ -73,6 +93,7 @@ export default function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -11,9 +11,7 @@ export default function SetTypeModal({
   onDelete,
   canDelete,
 }) {
-  if (!currentSet) return null;
-
-  const currentType = currentSet.set_type || "normal";
+  const currentType = currentSet?.set_type || currentSet?.type || "normal";
   const typeLabel = {
     normal: "Normal Set",
     warmup: "Warm Up",
@@ -27,7 +25,7 @@ export default function SetTypeModal({
       label: "Normal Set",
       badge: getSetLabel(
         allSets.map((s, i) =>
-          i === setIndex ? { ...s, set_type: "normal" } : s
+          i === setIndex ? { ...s, set_type: "normal", type: "normal" } : s
         ),
         setIndex
       ),
@@ -129,7 +127,13 @@ export default function SetTypeModal({
             >
               <div
                 className="w-8 h-8 flex items-center justify-center font-semibold text-sm"
-                style={{ background: "rgba(239,68,68,0.15)", color: "var(--color-danger)", border: "1px solid rgba(239,68,68,0.3)", clipPath: "polygon(4px 0%, 100% 0%, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0% 100%, 0% 4px)" }}
+                style={{
+                  background: "rgba(239,68,68,0.15)",
+                  color: "var(--color-danger)",
+                  border: "1px solid rgba(239,68,68,0.3)",
+                  clipPath:
+                    "polygon(4px 0%, 100% 0%, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0% 100%, 0% 4px)",
+                }}
               >
                 ×
               </div>

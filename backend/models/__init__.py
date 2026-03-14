@@ -256,6 +256,7 @@ class WorkoutSession(db.Model):
         db.String(20), default="in_progress"
     )  # in_progress, completed, discarded
     notes = db.Column(db.Text, nullable=True)
+    workout_photo_url = db.Column(db.String(500), nullable=True)
     challenge_id = db.Column(db.Integer, db.ForeignKey("challenges.id"), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(
@@ -299,6 +300,7 @@ class WorkoutSession(db.Model):
             ),
             "status": self.status,
             "notes": self.notes,
+            "workout_photo_url": self.workout_photo_url,
             "total_volume": self.calculate_total_volume(),
             "pr_count": self.count_prs(),
             "challenge_id": self.challenge_id,

@@ -53,16 +53,26 @@ export default function TopBar({ title, onRefresh, onBack }) {
           </button>
         )}
 
-        <h1
-          className="text-base font-semibold tracking-widest uppercase"
-          style={{
-            color: "var(--color-text)",
-            letterSpacing: "0.15em",
-            textShadow: "none",
-          }}
-        >
-          {title}
-        </h1>
+        <div className="flex items-center gap-2">
+          <img
+            src="/monty-logo.svg"
+            alt="Monty Fitness logo"
+            className="h-6 w-auto shrink-0"
+            style={{
+              filter: "drop-shadow(0 0 8px var(--color-accent-40))",
+            }}
+          />
+          <h1
+            className="text-base font-semibold tracking-widest uppercase"
+            style={{
+              color: "var(--color-text)",
+              letterSpacing: "0.15em",
+              textShadow: "none",
+            }}
+          >
+            {title}
+          </h1>
+        </div>
 
         {onRefresh ? (
           <button

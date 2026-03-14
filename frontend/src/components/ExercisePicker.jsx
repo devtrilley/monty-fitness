@@ -275,15 +275,16 @@ export default function ExercisePicker({
                     {multiSelect ? (
                       <div
                         className="w-6 h-6 flex items-center justify-center flex-shrink-0"
-                        style={{ borderRadius: "3px" }}
                         style={
                           isSelected
                             ? {
+                                borderRadius: "3px",
                                 background: "var(--color-accent)",
                                 border: "2px solid var(--color-accent)",
                                 boxShadow: "0 0 8px var(--color-accent-60)",
                               }
                             : {
+                                borderRadius: "3px",
                                 border: "2px solid var(--color-border)",
                               }
                         }

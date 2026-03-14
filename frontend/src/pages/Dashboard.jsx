@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getWorkoutHistory, getAnalyticsSummary } from "../utils/api";
 import WorkoutHistoryCard from "../components/WorkoutHistoryCard";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import TopBar from "../components/TopBar";
 import { BarChart3, BookOpen } from "lucide-react";
 
@@ -54,8 +54,8 @@ export default function Dashboard() {
   const [summary, setSummary] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const [typedText, setTypedText] = useState("");
-
   useEffect(() => {
     async function fetchAll() {
       try {
@@ -72,7 +72,7 @@ export default function Dashboard() {
       }
     }
     fetchAll();
-  }, []);
+  }, [location.state?.refresh]); // re-fetch when navigated here after save
 
   useEffect(() => {
     if (!loaded || !user?.username) return;
@@ -107,7 +107,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--color-bg)" }}>
-      <TopBar title="MONTY" />
+      <TopBar title="Dashboard" />
       <div className="px-5 pt-5 pb-28">
         {/* User readout */}
         <div className="flex items-center gap-2 mb-5">

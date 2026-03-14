@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 export default function BaseModal({
   isOpen,
@@ -7,25 +8,39 @@ export default function BaseModal({
   children,
   showCloseButton = true,
 }) {
+  const [visible, setVisible] = useState(false);
+  const [closing, setClosing] = useState(false);
+
   useEffect(() => {
-    if (!isOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
+    if (isOpen) {
+      setClosing(false);
+      setVisible(true);
+      document.body.style.overflow = "hidden";
+    } else if (visible) {
+      setClosing(true);
+      const t = setTimeout(() => {
+        setVisible(false);
+        setClosing(false);
+        document.body.style.overflow = "";
+      }, 200);
+      return () => clearTimeout(t);
+    }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!visible) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 flex items-end justify-center z-[999] fade-in"
+      className={`fixed inset-0 flex items-end justify-center z-[999] ${
+        closing ? "fade-out" : "fade-in"
+      }`}
       style={{ background: "rgba(0,0,0,0.88)" }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg modal-slide-up"
+        className={`w-full max-w-lg ${
+          closing ? "modal-slide-down" : "modal-slide-up"
+        }`}
         style={{
           background: "var(--color-surface)",
           borderTop: "1px solid var(--color-border-bright)",
@@ -81,6 +96,7 @@ export default function BaseModal({
         {children}
         <div className="h-8" />
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

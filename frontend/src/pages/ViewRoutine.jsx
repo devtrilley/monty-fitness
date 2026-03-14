@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { getRoutineById, startWorkout } from "../utils/api";
+import { useWorkout } from "../context/WorkoutContext";
 import { getSetLabel } from "../utils/setHelpers";
 import TopBar from "../components/TopBar";
 import ExerciseImage from "../components/ExerciseImage";
@@ -9,6 +10,7 @@ import ExerciseImage from "../components/ExerciseImage";
 export default function ViewRoutine() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { openSession } = useWorkout();
   const [routine, setRoutine] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -74,7 +76,7 @@ export default function ViewRoutine() {
             onClick={async () => {
               try {
                 const { session } = await startWorkout(id);
-                navigate(`/workouts/session/${session.id}`);
+                openSession(session.id);
               } catch {
                 toast.error("Failed to start workout");
               }

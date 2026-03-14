@@ -5,6 +5,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
+import { useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion"; // eslint-disable-line no-unused-vars
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -17,6 +18,7 @@ import ViewRoutine from "./pages/ViewRoutine";
 import EditRoutine from "./pages/EditRoutine";
 import ActiveWorkout from "./pages/ActiveWorkout";
 import WorkoutDetails from "./pages/WorkoutDetails";
+import SaveWorkout from "./pages/SaveWorkout";
 import Analytics from "./pages/Analytics";
 import Challenges from "./pages/Challenges";
 import Admin from "./pages/Admin";
@@ -26,6 +28,33 @@ import Legal from "./pages/Legal";
 import CommunityRoutines from "./pages/CommunityRoutines";
 import BottomNav from "./components/BottomNav";
 import TronToaster from "./components/TronToaster";
+import { WorkoutProvider } from "./context/WorkoutContext";
+import { useWorkout } from "./context/WorkoutContext";
+import ActiveWorkoutOverlay from "./components/ActiveWorkoutOverlay";
+import WorkoutMiniBar from "./components/WorkoutMiniBar";
+import ScrollToTop from "./components/ScrollToTop";
+
+function WorkoutUI() {
+  const { isOpen, isMinimized } = useWorkout();
+  const prevMinimizedRef = useRef(false);
+  const fromMini = prevMinimizedRef.current && !isMinimized;
+
+  useEffect(() => {
+    prevMinimizedRef.current = isMinimized;
+  });
+
+  if (!isOpen) return null;
+  return (
+    <>
+      <AnimatePresence>
+        {!isMinimized && (
+          <ActiveWorkoutOverlay key="overlay" fromMini={fromMini} />
+        )}
+      </AnimatePresence>
+      {isMinimized && <WorkoutMiniBar />}
+    </>
+  );
+}
 
 // Must be inside BrowserRouter to access useLocation
 function AppRoutes() {
@@ -40,6 +69,7 @@ function AppRoutes() {
   ].includes(location.pathname);
   return (
     <>
+      <ScrollToTop />
       <AnimatePresence mode="wait">
         <motion.div
           key={location.pathname}
@@ -121,6 +151,14 @@ function AppRoutes() {
               }
             />
             <Route
+              path="/workouts/session/:sessionId/save"
+              element={
+                <ProtectedRoute>
+                  <SaveWorkout />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/analytics"
               element={
                 <ProtectedRoute>
@@ -158,6 +196,7 @@ function AppRoutes() {
         </motion.div>
       </AnimatePresence>
       {!hideNav && <BottomNav />}
+      <WorkoutUI />
     </>
   );
 }
@@ -165,10 +204,12 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <TronToaster />
-        <AppRoutes />
-      </BrowserRouter>
+      <WorkoutProvider>
+        <BrowserRouter>
+          <TronToaster />
+          <AppRoutes />
+        </BrowserRouter>
+      </WorkoutProvider>
     </AuthProvider>
   );
 }

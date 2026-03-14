@@ -77,7 +77,7 @@ export default function BottomNav() {
     <button
       onClick={onClick}
       disabled={disabled}
-            className="flex flex-col items-center justify-center w-10 h-10 transition-all duration-200 cursor-pointer disabled:cursor-not-allowed"
+      className="flex flex-col items-center justify-center w-10 h-10 transition-all duration-200 cursor-pointer disabled:cursor-not-allowed"
       style={{
         color: disabled ? "var(--color-surface-raised)" : "var(--color-muted)",
         border: `1px solid ${
@@ -122,7 +122,7 @@ export default function BottomNav() {
             <Link
               key={item.path}
               to={item.path}
-                            className="flex flex-col items-center justify-center h-12 transition-all duration-200 gap-0.5 px-3 cursor-pointer"
+              className="flex flex-col items-center justify-center h-12 transition-all duration-200 gap-0.5 px-3 cursor-pointer"
               style={
                 active
                   ? {

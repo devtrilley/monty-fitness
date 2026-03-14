@@ -1,4 +1,5 @@
 import { useNavigate, useLocation, Link } from "react-router-dom";
+import { createPortal } from "react-dom";
 import { Home, Dumbbell, User, BarChart3, LogOut, Flame } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -31,20 +32,19 @@ export default function SideNav({ isOpen, onClose }) {
     return false;
   };
 
-  return (
+  return createPortal(
     <>
       <div
         onClick={onClose}
-        className={`fixed inset-0 z-[55] transition-opacity duration-300 ${
+        className={`fixed inset-0 z-[115] transition-opacity duration-300 ${
           isOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
         }`}
-        style={{ background: "rgba(0,0,0,0.85)" }}
+        style={{ background: "rgba(0,0,0,0.5)" }}
       />
-
       <div
-        className={`fixed left-0 top-[57px] bottom-0 w-64 flex flex-col z-[60] transform transition-transform duration-300 ease-in-out ${
+        className={`fixed left-0 top-[57px] bottom-0 w-64 flex flex-col z-[120] transform transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{
@@ -126,6 +126,7 @@ export default function SideNav({ isOpen, onClose }) {
           </button>
         </div>
       </div>
-    </>
+      </>,
+    document.body
   );
 }

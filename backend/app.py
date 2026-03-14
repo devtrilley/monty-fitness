@@ -671,10 +671,16 @@ def get_template_routines(user):
     if not admin:
         return jsonify({"templates": [], "creator": None}), 200
 
-    folders = RoutineFolder.query.filter_by(user_id=admin.id).order_by(RoutineFolder.created_at).all()
+    folders = (
+        RoutineFolder.query.filter_by(user_id=admin.id)
+        .order_by(RoutineFolder.created_at)
+        .all()
+    )
     result = []
     for folder in folders:
-        folder_routines = Routine.query.filter_by(user_id=admin.id, folder_id=folder.id).all()
+        folder_routines = Routine.query.filter_by(
+            user_id=admin.id, folder_id=folder.id
+        ).all()
         routines_data = []
         for r in folder_routines:
             d = r.to_dict(include_exercises=True)
@@ -683,23 +689,34 @@ def get_template_routines(user):
             d["exercise_images"] = [ex.image_url for ex in exs[:4] if ex.image_url]
             d["exercise_count"] = len(r.routine_exercises)
             routines_data.append(d)
-        result.append({
-            "folder_id": folder.id,
-            "folder_name": folder.name,
-            "routines": routines_data,
-        })
+        result.append(
+            {
+                "folder_id": folder.id,
+                "folder_name": folder.name,
+                "routines": routines_data,
+            }
+        )
 
-    return jsonify({
-        "templates": result,
-        "creator": {"username": admin.username, "id": admin.id},
-    }), 200
+    return (
+        jsonify(
+            {
+                "templates": result,
+                "creator": {"username": admin.username, "id": admin.id},
+            }
+        ),
+        200,
+    )
 
 
 @app.route("/api/routines/templates/<int:routine_id>/save", methods=["POST"])
 @jwt_required_custom
 def save_template_routine(user, routine_id):
     admin = User.query.filter_by(is_admin=True).first()
-    source = Routine.query.filter_by(id=routine_id, user_id=admin.id).first() if admin else None
+    source = (
+        Routine.query.filter_by(id=routine_id, user_id=admin.id).first()
+        if admin
+        else None
+    )
     if not source:
         return jsonify({"error": "Template not found"}), 404
 
@@ -726,13 +743,15 @@ def save_template_routine(user, routine_id):
         db.session.add(new_re)
         db.session.flush()
         for rs in re.sets:
-            db.session.add(RoutineSet(
-                routine_exercise_id=new_re.id,
-                set_number=rs.set_number,
-                set_type=rs.set_type,
-                weight=rs.weight,
-                reps=rs.reps,
-            ))
+            db.session.add(
+                RoutineSet(
+                    routine_exercise_id=new_re.id,
+                    set_number=rs.set_number,
+                    set_type=rs.set_type,
+                    weight=rs.weight,
+                    reps=rs.reps,
+                )
+            )
 
     db.session.commit()
     return jsonify({"message": "Routine saved", "routine": new_routine.to_dict()}), 201
@@ -742,7 +761,11 @@ def save_template_routine(user, routine_id):
 @jwt_required_custom
 def save_template_folder(user, folder_id):
     admin = User.query.filter_by(is_admin=True).first()
-    source_folder = RoutineFolder.query.filter_by(id=folder_id, user_id=admin.id).first() if admin else None
+    source_folder = (
+        RoutineFolder.query.filter_by(id=folder_id, user_id=admin.id).first()
+        if admin
+        else None
+    )
     if not source_folder:
         return jsonify({"error": "Template folder not found"}), 404
 
@@ -772,13 +795,15 @@ def save_template_folder(user, folder_id):
             db.session.add(new_re)
             db.session.flush()
             for rs in re.sets:
-                db.session.add(RoutineSet(
-                    routine_exercise_id=new_re.id,
-                    set_number=rs.set_number,
-                    set_type=rs.set_type,
-                    weight=rs.weight,
-                    reps=rs.reps,
-                ))
+                db.session.add(
+                    RoutineSet(
+                        routine_exercise_id=new_re.id,
+                        set_number=rs.set_number,
+                        set_type=rs.set_type,
+                        weight=rs.weight,
+                        reps=rs.reps,
+                    )
+                )
 
     db.session.commit()
     return jsonify({"message": "Folder saved", "folder": new_folder.to_dict()}), 201
@@ -1166,37 +1191,92 @@ def finish_workout(user, session_id):
 
     data = request.get_json()
 
-    # Get list of completed set IDs from frontend
-    completed_set_ids = data.get("completed_set_ids", [])
-
-    # Delete all sets that are NOT in the completed list
-    if completed_set_ids:
-        for workout_ex in session.workout_exercises:
-            for workout_set in list(workout_ex.sets):
-                if workout_set.id not in completed_set_ids:
-                    db.session.delete(workout_set)
-
-        # Also remove exercises that have no sets left
-        db.session.flush()  # Apply deletions first
-        db.session.expire_all()  # Force refresh from database
-        for workout_ex in list(session.workout_exercises):
-            if len(workout_ex.sets) == 0:
-                db.session.delete(workout_ex)
-
     session.status = "completed"
     session.duration_minutes = data.get("duration_minutes")
     session.notes = data.get("notes")
+    session.name = data.get("name") or session.name
+    session.workout_photo_url = (
+        data.get("workout_photo_url") or session.workout_photo_url
+    )
 
-    # 💾 APPLY SET VALUE UPDATES FROM FRONTEND
-    set_updates = {u["id"]: u for u in data.get("set_updates", [])}
-    for workout_ex in session.workout_exercises:
-        for workout_set in workout_ex.sets:
-            if workout_set.id in set_updates:
-                update = set_updates[workout_set.id]
-                workout_set.weight = update.get("weight")
-                workout_set.reps = update.get("reps")
-                workout_set.rir = update.get("rir")
-                workout_set.set_type = update.get("set_type", "normal")
+    exercises_data = data.get("exercises", [])
+
+    # Build lookup of existing DB exercises by their ID
+    existing_exercises = {we.id: we for we in session.workout_exercises}
+
+    # Track which existing exercise IDs are still present
+    referenced_exercise_ids = set()
+
+    for ex_data in exercises_data:
+        we_id = ex_data.get("workout_exercise_id")
+        sets_data = ex_data.get("sets", [])
+
+        if we_id and we_id in existing_exercises:
+            # ── Existing exercise ──────────────────────────────────────────
+            workout_ex = existing_exercises[we_id]
+            referenced_exercise_ids.add(we_id)
+
+            # Which existing set IDs are still completed
+            completed_set_ids = {
+                s["workout_set_id"]
+                for s in sets_data
+                if s.get("workout_set_id")
+            }
+
+            # Delete uncompleted DB sets
+            for ws in list(workout_ex.sets):
+                if ws.id not in completed_set_ids:
+                    db.session.delete(ws)
+
+            db.session.flush()
+
+            # Update existing sets + create new ones
+            existing_set_ids = {ws.id: ws for ws in workout_ex.sets}
+            for set_data in sets_data:
+                sid = set_data.get("workout_set_id")
+                if sid and sid in existing_set_ids:
+                    ws = existing_set_ids[sid]
+                    ws.weight = set_data.get("weight")
+                    ws.reps = set_data.get("reps")
+                    ws.rir = set_data.get("rir")
+                    ws.set_type = set_data.get("set_type", "normal")
+                else:
+                    # New set added to existing exercise
+                    db.session.add(WorkoutSet(
+                        workout_exercise_id=workout_ex.id,
+                        set_number=len(workout_ex.sets) + 1,
+                        weight=set_data.get("weight"),
+                        reps=set_data.get("reps"),
+                        rir=set_data.get("rir"),
+                        set_type=set_data.get("set_type", "normal"),
+                    ))
+        else:
+            # ── New exercise added during workout ──────────────────────────
+            exercise_id = ex_data.get("exercise_id")
+            if not exercise_id:
+                continue
+            workout_ex = WorkoutExercise(
+                session_id=session.id,
+                exercise_id=exercise_id,
+                order_index=len(session.workout_exercises),
+            )
+            db.session.add(workout_ex)
+            db.session.flush()
+            for set_num, set_data in enumerate(sets_data, start=1):
+                db.session.add(WorkoutSet(
+                    workout_exercise_id=workout_ex.id,
+                    set_number=set_num,
+                    weight=set_data.get("weight"),
+                    reps=set_data.get("reps"),
+                    rir=set_data.get("rir"),
+                    set_type=set_data.get("set_type", "normal"),
+                ))
+
+    # Delete existing exercises that had zero completed sets
+    db.session.flush()
+    for we_id, workout_ex in existing_exercises.items():
+        if we_id not in referenced_exercise_ids:
+            db.session.delete(workout_ex)
 
     # 🏆 CALCULATE PRs FOR COMPLETED SETS
     for workout_ex in session.workout_exercises:
@@ -1883,6 +1963,110 @@ def admin_delete_user(user, target_id):
 
 
 # ============================================
+# UPLOAD ROUTES
+# ============================================
+import uuid
+import boto3
+from urllib.parse import urlparse
+from botocore.exceptions import ClientError
+
+
+@app.route("/api/upload/presign", methods=["POST"])
+@jwt_required_custom
+def presign_upload(user):
+    data = request.get_json() or {}
+    file_type = data.get("file_type", "image/jpeg")
+    upload_type = data.get("upload_type", "profile")
+
+    if not file_type.startswith("image/"):
+        return jsonify({"error": "Only image uploads are allowed"}), 400
+
+    ext = file_type.split("/")[-1] if "/" in file_type else file_type
+    ext = ext.lower()
+
+    allowed = ["jpg", "jpeg", "png", "gif", "webp", "heic", "heif", "bmp", "tiff"]
+    if ext not in allowed:
+        return jsonify({"error": "Unsupported image type"}), 400
+
+    if upload_type == "workout":
+        key = f"workouts/{user.id}/{uuid.uuid4()}.{ext}"
+    else:
+        key = f"profiles/{user.id}/{uuid.uuid4()}.{ext}"
+
+    try:
+        s3 = boto3.client(
+            "s3",
+            region_name=os.getenv("AWS_REGION"),
+            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+        )
+
+        presigned_url = s3.generate_presigned_url(
+            "put_object",
+            Params={
+                "Bucket": os.getenv("AWS_S3_BUCKET"),
+                "Key": key,
+                "ContentType": file_type,
+            },
+            ExpiresIn=300,
+        )
+
+        bucket = os.getenv("AWS_S3_BUCKET")
+        region = os.getenv("AWS_REGION")
+        final_url = f"https://{bucket}.s3.{region}.amazonaws.com/{key}"
+
+        return jsonify({"presigned_url": presigned_url, "final_url": final_url}), 200
+    except ClientError as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/workouts/<int:workout_id>/photo", methods=["PATCH"])
+@jwt_required_custom
+def save_workout_photo(user, workout_id):
+    workout = WorkoutSession.query.get(workout_id)
+    if not workout or workout.user_id != user.id:
+        return jsonify({"error": "Not found"}), 404
+
+    data = request.get_json() or {}
+    new_photo_url = data.get("photo_url")
+
+    if not new_photo_url:
+        return jsonify({"error": "photo_url required"}), 400
+
+    old_photo_url = workout.workout_photo_url
+    workout.workout_photo_url = new_photo_url
+    db.session.commit()
+
+    if old_photo_url and old_photo_url != new_photo_url:
+        try:
+            parsed = urlparse(old_photo_url)
+            old_key = parsed.path.lstrip("/")
+
+            s3 = boto3.client(
+                "s3",
+                region_name=os.getenv("AWS_REGION"),
+                aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+                aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+            )
+            s3.delete_object(
+                Bucket=os.getenv("AWS_S3_BUCKET"),
+                Key=old_key,
+            )
+        except Exception as e:
+            print(f"⚠️ Failed to delete old workout photo: {e}")
+
+    return (
+        jsonify(
+            {
+                "message": "Photo saved",
+                "workout_photo_url": workout.workout_photo_url,
+            }
+        ),
+        200,
+    )
+
+
+# ============================================
 # CLI COMMANDS
 # ============================================
 
@@ -1997,8 +2181,10 @@ def seed_admin():
 def seed_templates_cmd():
     """Seed admin template routines"""
     from seed_data.templates import seed_templates
+
     seed_templates(db)
     print("Template routines seeded!")
+
 
 @app.cli.command("fresh")
 def fresh():

@@ -179,8 +179,6 @@ export default function Analytics() {
                 style={{
                   clipPath:
                     "polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px)",
-                }}
-                style={{
                   background: "var(--color-accent-subtle)",
                   border: "1px solid var(--color-accent-20)",
                 }}

@@ -87,16 +87,15 @@ export default function Auth() {
           borderBottom: "1px solid var(--color-border)",
         }}
       >
-        <div className="max-w-md mx-auto flex items-center gap-2">
-          <div
-            className="w-7 h-7 rounded-md flex items-center justify-center"
+        <div className="max-w-md mx-auto flex items-center gap-3">
+          <img
+            src="/monty-logo.svg"
+            alt="Monty Fitness logo"
+            className="h-8 w-auto shrink-0"
             style={{
-              background: "var(--color-accent)",
-              boxShadow: "0 0 10px var(--color-accent-60)",
+              filter: "drop-shadow(0 0 10px var(--color-accent-60))",
             }}
-          >
-            <span className="text-white font-bold text-sm">M</span>
-          </div>
+          />
           <span
             className="text-lg font-bold tracking-[0.2em] uppercase"
             style={{
@@ -112,11 +111,23 @@ export default function Auth() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 pt-16 pb-10">
         <div className="w-full max-w-md mx-auto">
+          <div className="flex justify-center mb-6">
+            <img
+              src="/monty-logo-with-text.svg"
+              alt="Monty Fitness logo"
+              className="w-full max-w-[180px] h-auto"
+              style={{
+                filter: "drop-shadow(0 0 14px var(--color-accent-40))",
+              }}
+            />
+          </div>
+
           {/* Mode Toggle */}
           <div
             className="relative flex mb-8 overflow-hidden"
             style={{
-              clipPath: "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+              clipPath:
+                "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
               border: "1px solid var(--color-accent)",
             }}
           >

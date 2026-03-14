@@ -296,12 +296,51 @@ export const getTemplateRoutines = async () => {
 };
 
 export const saveTemplateRoutine = async (routineId, folderId = null) => {
-  const { data } = await api.post(`/routines/templates/${routineId}/save`, { folder_id: folderId });
+  const { data } = await api.post(`/routines/templates/${routineId}/save`, {
+    folder_id: folderId,
+  });
   return data;
 };
 
 export const saveTemplateFolder = async (folderId) => {
-  const { data } = await api.post(`/routines/templates/folder/${folderId}/save`);
+  const { data } = await api.post(
+    `/routines/templates/folder/${folderId}/save`
+  );
+  return data;
+};
+
+// ======================
+// UPLOAD API
+// ======================
+export const getPresignedUrl = async (fileType, uploadType = "profile") => {
+  const { data } = await api.post("/upload/presign", {
+    file_type: fileType,
+    upload_type: uploadType,
+  });
+  return data;
+};
+
+export const uploadToS3 = async (presignedUrl, file) => {
+  const response = await fetch(presignedUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": file.type || "application/octet-stream",
+    },
+    body: file,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    throw new Error(`S3 upload failed: ${response.status} ${errorText}`);
+  }
+
+  return true;
+};
+
+export const saveWorkoutPhoto = async (workoutId, photoUrl) => {
+  const { data } = await api.patch(`/workouts/${workoutId}/photo`, {
+    photo_url: photoUrl,
+  });
   return data;
 };
 

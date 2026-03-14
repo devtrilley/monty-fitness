@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useWorkout } from "../context/WorkoutContext";
 import {
   getRoutines,
   startWorkout,
@@ -51,14 +52,27 @@ export default function Workouts() {
   const [folders, setFolders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(null);
-  const [collapsedFolders, setCollapsedFolders] = useState(new Set());
-  const [myRoutinesCollapsed, setMyRoutinesCollapsed] = useState(false);
+  const [openFolders, setOpenFolders] = useState(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem("open_folders") || "[]"));
+    } catch {
+      return new Set();
+    }
+  });
+  const [myRoutinesCollapsed, setMyRoutinesCollapsed] = useState(
+    () => localStorage.getItem("my_routines_collapsed") !== "false"
+  );
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [renamingFolderId, setRenamingFolderId] = useState(null);
   const [renameFolderName, setRenameFolderName] = useState("");
   const [movingRoutineId, setMovingRoutineId] = useState(null);
   const navigate = useNavigate();
+  const { openSession, isOpen, discard } = useWorkout();
+  const [showActiveWarning, setShowActiveWarning] = useState(false);
+  const [pendingRoutineId, setPendingRoutineId] = useState(null);
+  const [pendingEmpty, setPendingEmpty] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = () => {
@@ -89,21 +103,52 @@ export default function Workouts() {
 
   const handleStartWorkout = async (e, routineId) => {
     e.stopPropagation();
+    if (isOpen) {
+      setPendingRoutineId(routineId);
+      setPendingEmpty(false);
+      setShowActiveWarning(true);
+      return;
+    }
     try {
       const { session } = await startWorkout(routineId);
-      navigate(`/workouts/session/${session.id}`);
+      openSession(session.id);
     } catch {
       toast.error("Failed to start workout");
     }
   };
-
   const handleStartEmptyWorkout = async () => {
+    if (isOpen) {
+      setPendingEmpty(true);
+      setPendingRoutineId(null);
+      setShowActiveWarning(true);
+      return;
+    }
     try {
       const { session } = await startEmptyWorkout();
-      navigate(`/workouts/session/${session.id}`);
+      openSession(session.id);
     } catch {
       toast.error("Failed to start empty workout");
     }
+  };
+  const handleDiscardAndStart = async () => {
+    setDiscarding(true);
+    const ok = await discard();
+    if (!ok) { setDiscarding(false); return; }
+    setShowActiveWarning(false);
+    setDiscarding(false);
+    try {
+      if (pendingEmpty) {
+        const { session } = await startEmptyWorkout();
+        openSession(session.id);
+      } else if (pendingRoutineId) {
+        const { session } = await startWorkout(pendingRoutineId);
+        openSession(session.id);
+      }
+    } catch {
+      toast.error("Failed to start workout");
+    }
+    setPendingRoutineId(null);
+    setPendingEmpty(false);
   };
 
   const handleDeleteRoutine = async (e, routineId, routineName) => {
@@ -186,10 +231,11 @@ export default function Workouts() {
   };
 
   const toggleFolder = (folderId) => {
-    setCollapsedFolders((prev) => {
+    setOpenFolders((prev) => {
       const next = new Set(prev);
       if (next.has(folderId)) next.delete(folderId);
       else next.add(folderId);
+      localStorage.setItem("open_folders", JSON.stringify([...next]));
       return next;
     });
   };
@@ -200,50 +246,52 @@ export default function Workouts() {
   if (loading) return <WorkoutsSkeleton />;
 
   const RoutineCard = ({ routine }) => (
-    <div
-      style={{
-        background: "var(--color-surface)",
-        border: "1px solid var(--color-border)",
-        clipPath:
-          "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
-      }}
-    >
+    <div className="relative">
       <div
-        onClick={() => navigate(`/workouts/${routine.id}`)}
-        className="w-full flex items-center justify-between p-4 transition-colors cursor-pointer"
-        onMouseEnter={(e) =>
-          (e.currentTarget.style.background = "var(--color-surface-raised)")
-        }
-        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+        style={{
+          background: "var(--color-surface)",
+          border: "1px solid var(--color-border)",
+          clipPath:
+            "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+        }}
       >
-        <div className="flex-1 min-w-0 pr-2">
-          <p className="font-semibold text-text">{routine.name}</p>
-          {routine.exercise_preview && (
-            <p className="text-xs text-muted mt-0.5 truncate">
-              {routine.exercise_preview}
-            </p>
-          )}
-          {routine.exercise_images?.length > 0 && (
-            <div className="flex gap-1 mt-2">
-              {routine.exercise_images.map((url, i) => (
-                <div
-                  key={i}
-                  className="w-7 h-7 rounded-md overflow-hidden bg-surface-raised flex-shrink-0"
-                >
-                  <img
-                    src={url}
-                    alt=""
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="relative flex-shrink-0">
+        <div
+          onClick={() => navigate(`/workouts/${routine.id}`)}
+          className="w-full flex items-center justify-between p-4 transition-colors cursor-pointer"
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.background = "var(--color-surface-raised)")
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.background = "transparent")
+          }
+        >
+          <div className="flex-1 min-w-0 pr-2">
+            <p className="font-semibold text-text">{routine.name}</p>
+            {routine.exercise_preview && (
+              <p className="text-xs text-muted mt-0.5 truncate">
+                {routine.exercise_preview}
+              </p>
+            )}
+            {routine.exercise_images?.length > 0 && (
+              <div className="flex gap-1 mt-2">
+                {routine.exercise_images.map((url, i) => (
+                  <div
+                    key={i}
+                    className="w-7 h-7 rounded-md overflow-hidden bg-surface-raised flex-shrink-0"
+                  >
+                    <img
+                      src={url}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -253,68 +301,66 @@ export default function Workouts() {
                   : { type: "routine", id: routine.id }
               );
             }}
-            className="p-2 hover:bg-surface-raised rounded-lg"
+            className="p-2 hover:bg-surface-raised rounded-lg flex-shrink-0"
           >
             <span className="text-muted">•••</span>
           </button>
-          {menuOpen?.type === "routine" && menuOpen?.id === routine.id && (
-            <div
-              className="fixed shadow-lg z-50"
-              style={{
-                right: "1rem",
-                width: "11rem",
-                background: "var(--color-surface)",
-                border: "1px solid var(--color-border-bright)",
-                clipPath:
-                  "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
-              }}
-            >
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/workouts/${routine.id}/edit`);
-                  setMenuOpen(null);
-                }}
-                className="w-full px-4 py-2.5 text-left text-sm text-text hover:bg-surface-raised"
-              >
-                Edit
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setMovingRoutineId(routine.id);
-                  setMenuOpen(null);
-                }}
-                className="w-full px-4 py-2.5 text-left text-sm text-text hover:bg-surface-raised"
-              >
-                Move to Folder
-              </button>
-              <button
-                onClick={(e) =>
-                  handleDeleteRoutine(e, routine.id, routine.name)
-                }
-                className="w-full px-4 py-2.5 text-left text-sm text-danger hover:bg-surface-raised"
-              >
-                Delete
-              </button>
-            </div>
-          )}
+        </div>
+        <div className="px-4 pb-4">
+          <ChamferButton
+            onClick={(e) => handleStartWorkout(e, routine.id)}
+            size="sm"
+          >
+            Start Routine
+          </ChamferButton>
         </div>
       </div>
-      <div className="px-4 pb-4">
-        <ChamferButton
-          onClick={(e) => handleStartWorkout(e, routine.id)}
-          size="sm"
+      {menuOpen?.type === "routine" && menuOpen?.id === routine.id && (
+        <div
+          className="absolute right-0 shadow-lg z-[9999]"
+          style={{
+            top: "8px",
+            width: "11rem",
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-border-bright)",
+            clipPath:
+              "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+          }}
         >
-          Start Routine
-        </ChamferButton>
-      </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/workouts/${routine.id}/edit`);
+              setMenuOpen(null);
+            }}
+            className="w-full px-4 py-2.5 text-left text-sm text-text hover:bg-surface-raised"
+          >
+            Edit
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setMovingRoutineId(routine.id);
+              setMenuOpen(null);
+            }}
+            className="w-full px-4 py-2.5 text-left text-sm text-text hover:bg-surface-raised"
+          >
+            Move to Folder
+          </button>
+          <button
+            onClick={(e) => handleDeleteRoutine(e, routine.id, routine.name)}
+            className="w-full px-4 py-2.5 text-left text-sm text-danger hover:bg-surface-raised"
+          >
+            Delete
+          </button>
+        </div>
+      )}
     </div>
   );
 
   const FolderSection = ({ folder }) => {
     const folderRoutines = routines.filter((r) => r.folder_id === folder.id);
-    const isCollapsed = collapsedFolders.has(folder.id);
+    const isCollapsed = !openFolders.has(folder.id);
     return (
       <div className="mb-2">
         <div className="flex items-center py-2 gap-2">
@@ -370,9 +416,9 @@ export default function Workouts() {
             </button>
             {menuOpen?.type === "folder" && menuOpen?.id === folder.id && (
               <div
-                className="fixed shadow-lg z-50"
+                className="absolute right-0 shadow-lg z-[9999]"
                 style={{
-                  right: "1rem",
+                  top: "calc(100% + 4px)",
                   width: "10rem",
                   background: "var(--color-surface)",
                   border: "1px solid var(--color-border-bright)",
@@ -507,7 +553,11 @@ export default function Workouts() {
         <div className="mt-2">
           <div className="flex items-center py-2 gap-2">
             <button
-              onClick={() => setMyRoutinesCollapsed(!myRoutinesCollapsed)}
+              onClick={() => {
+                const next = !myRoutinesCollapsed;
+                setMyRoutinesCollapsed(next);
+                localStorage.setItem("my_routines_collapsed", String(!next));
+              }}
               className="flex items-center gap-2 flex-1 text-left"
             >
               <svg
@@ -546,6 +596,63 @@ export default function Workouts() {
           )}
         </div>
       </div>
+      {showActiveWarning && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-[999] px-4 fade-in"
+          style={{ background: "rgba(0,0,0,0.88)" }}
+          onClick={() => setShowActiveWarning(false)}
+        >
+          <div
+            className="w-full max-w-sm p-6 modal-slide-up"
+            style={{
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border-bright)",
+              clipPath: "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+              boxShadow: "0 0 48px rgba(0,0,0,0.95), 0 0 24px var(--color-accent-15)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2
+              className="text-sm font-bold uppercase tracking-[0.2em] mb-2"
+              style={{ color: "var(--color-text)", fontFamily: "monospace" }}
+            >
+              Workout In Progress
+            </h2>
+            <p className="text-sm mb-5" style={{ color: "var(--color-muted)" }}>
+              You have an active workout. Go back to finish it, or discard it to start a new one.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => setShowActiveWarning(false)}
+                className="w-full py-2.5 text-sm font-bold uppercase tracking-[0.15em] transition-all active:scale-[0.98]"
+                style={{
+                  background: "var(--color-accent)",
+                  color: "#000",
+                  clipPath: "polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px)",
+                  fontFamily: "monospace",
+                }}
+              >
+                Continue Workout
+              </button>
+              <button
+                onClick={handleDiscardAndStart}
+                disabled={discarding}
+                className="w-full py-2.5 text-sm font-bold uppercase tracking-[0.15em] transition-all active:scale-[0.98] disabled:opacity-50"
+                style={{
+                  background: "rgba(239,68,68,0.12)",
+                  border: "1px solid var(--color-danger)",
+                  color: "var(--color-danger)",
+                  clipPath: "polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px)",
+                  fontFamily: "monospace",
+                }}
+              >
+                {discarding ? "Discarding..." : "Discard & Start New"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Move to Folder Bottom Sheet */}
       {movingRoutineId && (
         <div

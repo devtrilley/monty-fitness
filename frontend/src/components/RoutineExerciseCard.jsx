@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import ExerciseImage from "./ExerciseImage";
 import ExerciseCardMenu from "./ExerciseCardMenu";
+import SetTypeModal from "./SetTypeModal";
 import { getSetLabel } from "../utils/setHelpers";
 
 export default function RoutineExerciseCard({
@@ -16,6 +18,8 @@ export default function RoutineExerciseCard({
   onLongPressEnd,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [setTypeModalIdx, setSetTypeModalIdx] = useState(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const showWeight = exercise.equipment !== "Bodyweight";
 
   const updateField = (field, value) => {
@@ -28,11 +32,9 @@ export default function RoutineExerciseCard({
     onUpdate(index, { ...exercise, sets: newSets });
   };
 
-  const toggleSetType = (setIndex) => {
-    const types = ["normal", "warmup", "failure", "drop"];
-    const currentType = exercise.sets[setIndex].type || "normal";
-    const nextType = types[(types.indexOf(currentType) + 1) % types.length];
-    updateSet(setIndex, "type", nextType);
+  const handleSetTypeSelect = (type) => {
+    updateSet(setTypeModalIdx, "type", type);
+    setSetTypeModalIdx(null);
   };
 
   const addSet = () => {
@@ -89,11 +91,16 @@ export default function RoutineExerciseCard({
     >
       {/* Header */}
       <div className="flex items-center justify-between gap-3 mb-4">
-        <ExerciseImage
-          imageUrl={exercise.image_url}
-          name={exercise.exercise_name}
-          size="sm"
-        />
+        <button
+          onClick={() => exercise.image_url && setLightboxOpen(true)}
+          className="flex-shrink-0"
+        >
+          <ExerciseImage
+            imageUrl={exercise.image_url}
+            name={exercise.exercise_name}
+            size="sm"
+          />
+        </button>
         <h3
           className="font-medium text-text flex-1 truncate cursor-grab"
           onTouchStart={onLongPressStart}
@@ -196,7 +203,7 @@ export default function RoutineExerciseCard({
           } gap-1.5 mb-2 items-center`}
         >
           <button
-            onClick={() => toggleSetType(setIndex)}
+            onClick={() => setSetTypeModalIdx(setIndex)}
             className="h-9 rounded-lg font-medium text-sm"
             style={getSetStyle(set.type)}
           >
@@ -252,6 +259,58 @@ export default function RoutineExerciseCard({
       >
         + Add set
       </button>
+
+      {createPortal(
+        <SetTypeModal
+          isOpen={setTypeModalIdx !== null}
+          onClose={() => setSetTypeModalIdx(null)}
+          currentSet={
+            setTypeModalIdx !== null ? exercise.sets[setTypeModalIdx] : null
+          }
+          allSets={exercise.sets}
+          setIndex={setTypeModalIdx ?? 0}
+          onSelectType={handleSetTypeSelect}
+          onDelete={() => {
+            removeSet(setTypeModalIdx);
+            setSetTypeModalIdx(null);
+          }}
+          canDelete={true}
+        />,
+        document.body
+      )}
+
+      {lightboxOpen &&
+        exercise.image_url &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center"
+            style={{ background: "rgba(0,0,0,0.92)" }}
+            onClick={() => setLightboxOpen(false)}
+          >
+            <img
+              src={exercise.image_url}
+              alt={exercise.exercise_name}
+              className="max-w-[90vw] max-h-[80vh] object-contain"
+              style={{
+                clipPath:
+                  "polygon(12px 0%, 100% 0%, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0% 100%, 0% 12px)",
+              }}
+            />
+            <p
+              className="absolute bottom-10 left-0 right-0 text-center"
+              style={{
+                color: "var(--color-muted)",
+                fontFamily: "monospace",
+                fontSize: "11px",
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+              }}
+            >
+              {exercise.exercise_name} — tap to close
+            </p>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
