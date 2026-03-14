@@ -6,11 +6,61 @@ import {
   getWorkoutHistory,
   getPresignedUrl,
   uploadToS3,
+  deleteAccount,
 } from "../utils/api";
+import ConfirmModal from "../components/ConfirmModal";
 import WorkoutHistoryCard from "../components/WorkoutHistoryCard";
 import TopBar from "../components/TopBar";
+import { BarChart3, Trophy } from "lucide-react";
 import ChamferButton from "../components/ChamferButton";
 import { toast } from "../components/TronToaster";
+
+function ProfileSkeleton() {
+  return (
+    <div className="min-h-screen bg-bg pb-20">
+      <TopBar title="Profile" />
+      <div className="px-6 py-6 space-y-4 animate-pulse">
+        <div
+          className="p-5 flex items-center gap-4"
+          style={{
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+          }}
+        >
+          <div className="w-16 h-16 rounded bg-surface-raised flex-shrink-0" />
+          <div className="space-y-2 flex-1">
+            <div className="h-4 w-32 bg-surface-raised rounded" />
+            <div className="h-3 w-24 bg-surface-raised rounded" />
+            <div className="h-3 w-28 bg-surface-raised rounded" />
+          </div>
+        </div>
+        <div
+          className="p-5 space-y-3"
+          style={{
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+          }}
+        >
+          <div className="grid grid-cols-2 gap-3">
+            <div className="h-10 bg-surface-raised rounded-lg" />
+            <div className="h-10 bg-surface-raised rounded-lg" />
+          </div>
+          <div className="h-20 bg-surface-raised rounded-lg" />
+          <div className="h-10 bg-surface-raised rounded-lg" />
+        </div>
+        <div
+          style={{
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+          }}
+        >
+          <div className="h-14 bg-surface-raised mx-0" />
+          <div className="h-14 bg-surface-raised mx-0 mt-px" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -22,6 +72,7 @@ export default function Profile() {
     user?.display_name_preference || "username"
   );
   const [saving, setSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [workouts, setWorkouts] = useState([]);
   const [photoUploading, setPhotoUploading] = useState(false);
   const photoInputRef = useRef(null);
@@ -116,6 +167,17 @@ export default function Profile() {
       setSaving(false);
     }
   };
+
+  const handleDeleteAccount = async () => {
+    try {
+      await deleteAccount();
+      logout();
+    } catch {
+      toast.error("Failed to delete account.");
+    }
+  };
+
+  if (!user) return <ProfileSkeleton />;
 
   return (
     <div className="min-h-screen bg-bg pb-20">
@@ -318,7 +380,10 @@ export default function Profile() {
               (e.currentTarget.style.background = "transparent")
             }
           >
-            <span className="font-medium text-text">📊 Analytics</span>
+            <span className="font-medium text-text flex items-center gap-2">
+              <BarChart3 size={15} style={{ color: "var(--color-accent)" }} />{" "}
+              Analytics
+            </span>
             <span className="text-muted">›</span>
           </button>
           <button
@@ -331,7 +396,10 @@ export default function Profile() {
               (e.currentTarget.style.background = "transparent")
             }
           >
-            <span className="font-medium text-text">🏆 Challenges</span>
+            <span className="font-medium text-text flex items-center gap-2">
+              <Trophy size={15} style={{ color: "var(--color-accent)" }} />{" "}
+              Challenges
+            </span>
             <span className="text-muted">›</span>
           </button>
         </div>
@@ -362,6 +430,27 @@ export default function Profile() {
           )}
         </div>
 
+        {/* Delete Account */}
+        <button
+          onClick={() => setShowDeleteConfirm(true)}
+          className="w-full py-3 text-xs uppercase tracking-[0.15em] transition-all"
+          style={{
+            fontFamily: "monospace",
+            color: "var(--color-danger)",
+            opacity: 0.5,
+          }}
+        >
+          Delete Account
+        </button>
+        <ConfirmModal
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={handleDeleteAccount}
+          title="Delete Account?"
+          message="This will permanently delete your account and all workout data. This cannot be undone."
+          confirmText="Delete Forever"
+          confirmDanger
+        />
         {/* Logout */}
         <button
           onClick={logout}

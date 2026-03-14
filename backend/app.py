@@ -335,7 +335,10 @@ def update_profile(user):
         user.bio = data["bio"]
     if "profile_photo_url" in data:
         user.profile_photo_url = data["profile_photo_url"]
-    if "display_name_preference" in data and data["display_name_preference"] in ("username", "first_name"):
+    if "display_name_preference" in data and data["display_name_preference"] in (
+        "username",
+        "first_name",
+    ):
         user.display_name_preference = data["display_name_preference"]
     db.session.commit()
     return jsonify({"message": "Profile updated", "user": user.to_dict()}), 200
@@ -344,6 +347,16 @@ def update_profile(user):
 # ============================================
 # EXERCISE ROUTES
 # ============================================
+
+
+@app.route("/api/auth/me", methods=["DELETE"])
+@jwt_required_custom
+def delete_account(user):
+    db.session.delete(user)
+    db.session.commit()
+    response = make_response(jsonify({"message": "Account deleted"}), 200)
+    unset_jwt_cookies(response)
+    return response
 
 
 @app.route("/api/exercises", methods=["GET"])

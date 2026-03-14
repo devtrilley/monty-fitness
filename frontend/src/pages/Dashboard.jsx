@@ -4,7 +4,7 @@ import { getWorkoutHistory, getAnalyticsSummary } from "../utils/api";
 import WorkoutHistoryCard from "../components/WorkoutHistoryCard";
 import { useNavigate, useLocation } from "react-router-dom";
 import TopBar from "../components/TopBar";
-import { BarChart3, BookOpen } from "lucide-react";
+import { BarChart3, BookOpen, Flame } from "lucide-react";
 
 function DashboardSkeleton() {
   return (
@@ -302,45 +302,86 @@ export default function Dashboard() {
         {/* Streak */}
         {summary?.current_weekly_streak > 0 && (
           <div
-            className="flex items-center gap-3 px-4 py-3 mb-5"
+            className="streak-banner mb-5"
             style={{
               background: "var(--color-surface)",
-              borderLeft: "2px solid var(--color-accent)",
-              borderTop: "1px solid var(--color-border)",
-              borderRight: "1px solid var(--color-border)",
-              borderBottom: "1px solid var(--color-border)",
+              border: "1px solid var(--color-border)",
+              position: "relative",
+              overflow: "hidden",
             }}
           >
-            <span className="text-base">🔥</span>
-            <p
+            <div className="streak-banner-left-rail" />
+
+            <svg
               style={{
-                color: "var(--color-text)",
-                fontSize: "12px",
-                fontWeight: 600,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                pointerEvents: "none",
+                zIndex: 2,
               }}
             >
-              {summary.current_weekly_streak} week streak
-            </p>
-            {summary.badge && (
-              <span
+              <rect
+                x="0.75"
+                y="0.75"
+                width="calc(100% - 1.5px)"
+                height="calc(100% - 1.5px)"
+                fill="none"
+                stroke="var(--color-accent)"
+                strokeWidth="1"
                 style={{
-                  marginLeft: "auto",
-                  color: "var(--color-accent)",
-                  border: "1px solid var(--color-accent-30)",
-                  background: "var(--color-accent-subtle)",
-                  fontFamily: "monospace",
-                  fontSize: "9px",
-                  letterSpacing: "0.15em",
+                  filter: "drop-shadow(0 0 3px var(--color-accent))",
+                  strokeDasharray: "18 240",
+                  animation: "borderTrace 4.2s linear infinite",
+                  opacity: 0.55,
+                }}
+              />
+            </svg>
+
+            <div className="streak-banner-content flex items-center gap-3 px-4 py-3">
+              <Flame
+                size={16}
+                className="streak-banner-icon"
+                style={{ color: "var(--color-accent)", flexShrink: 0 }}
+              />
+
+              <p
+                className="streak-banner-text"
+                style={{
+                  color: "var(--color-text)",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  letterSpacing: "0.12em",
                   textTransform: "uppercase",
-                  padding: "2px 8px",
-                  clipPath: chamfer(4),
                 }}
               >
-                {summary.badge}
-              </span>
-            )}
+                {summary.current_weekly_streak} week streak
+              </p>
+
+              {summary.badge && (
+                <span
+                  style={{
+                    marginLeft: "auto",
+                    color: "var(--color-accent)",
+                    border: "1px solid var(--color-accent-30)",
+                    background: "rgba(0, 200, 255, 0.05)",
+                    fontFamily: "monospace",
+                    fontSize: "9px",
+                    letterSpacing: "0.15em",
+                    textTransform: "uppercase",
+                    padding: "3px 10px",
+                    clipPath: chamfer(4),
+                    boxShadow:
+                      "0 0 8px rgba(0, 200, 255, 0.14), inset 0 0 6px rgba(0, 200, 255, 0.06)",
+                    animation: "badgePulse 2.2s ease-in-out infinite",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {summary.badge}
+                </span>
+              )}
+            </div>
           </div>
         )}
 
@@ -431,7 +472,11 @@ export default function Dashboard() {
                 clipPath: chamfer(10),
               }}
             >
-              <p className="text-3xl mb-3">🏔️</p>
+              <BarChart3
+                size={32}
+                className="mx-auto mb-3"
+                style={{ color: "var(--color-border-bright)" }}
+              />
               <p
                 style={{
                   color: "var(--color-text)",

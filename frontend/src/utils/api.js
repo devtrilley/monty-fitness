@@ -148,6 +148,11 @@ export const updateProfile = async (
 };
 
 // Exercise API
+export const deleteAccount = async () => {
+  const { data } = await api.delete("/auth/me");
+  return data;
+};
+
 export const getExercises = async (filters = {}) => {
   const { data } = await api.get("/exercises", { params: filters });
   return data;

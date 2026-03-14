@@ -239,6 +239,178 @@ select:focus {
     transform: translateY(0);
   }
 }
+
+@keyframes borderTrace {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -440;
+  }
+}
+
+@keyframes badgePulse {
+  0%,
+  100% {
+    box-shadow: 0 0 8px var(--color-accent-40);
+  }
+  50% {
+    box-shadow: 0 0 18px var(--color-accent-60), 0 0 32px var(--color-accent-20);
+  }
+}
+
+@keyframes tronPanelPulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(0, 200, 255, 0.12),
+      inset 0 0 12px rgba(0, 200, 255, 0.06), 0 0 8px rgba(0, 200, 255, 0.08);
+  }
+  50% {
+    box-shadow: inset 0 0 0 1px rgba(0, 200, 255, 0.24),
+      inset 0 0 22px rgba(0, 200, 255, 0.12), 0 0 14px rgba(0, 200, 255, 0.14);
+  }
+}
+
+@keyframes tronRailPulse {
+  0%,
+  100% {
+    opacity: 0.65;
+    box-shadow: 0 0 6px rgba(0, 200, 255, 0.35);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 14px rgba(0, 200, 255, 0.8),
+      0 0 28px rgba(0, 200, 255, 0.22);
+  }
+}
+
+@keyframes tronCoreGlow {
+  0%,
+  100% {
+    opacity: 0.14;
+  }
+  50% {
+    opacity: 0.26;
+  }
+}
+
+@keyframes tronTextPulse {
+  0%,
+  100% {
+    text-shadow: 0 0 6px rgba(0, 200, 255, 0.12);
+    opacity: 0.96;
+  }
+  50% {
+    text-shadow: 0 0 10px rgba(0, 200, 255, 0.3),
+      0 0 18px rgba(0, 200, 255, 0.12);
+    opacity: 1;
+  }
+}
+
+@keyframes tronIconPulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 2px rgba(0, 200, 255, 0.25));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(0, 200, 255, 0.6));
+    transform: scale(1.04);
+  }
+}
+
+@keyframes tronScanGlow {
+  0% {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.08;
+  }
+  50% {
+    opacity: 0.16;
+  }
+  88% {
+    opacity: 0.08;
+  }
+  100% {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+.streak-banner {
+  position: relative;
+  isolation: isolate;
+  animation: tronPanelPulse 2.8s ease-in-out infinite;
+}
+
+.streak-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+      circle at 14% 50%,
+      rgba(0, 200, 255, 0.12),
+      transparent 20%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(0, 200, 255, 0.03) 0%,
+      rgba(0, 200, 255, 0.06) 18%,
+      rgba(0, 200, 255, 0.02) 40%,
+      rgba(0, 200, 255, 0) 100%
+    );
+  animation: tronCoreGlow 2.8s ease-in-out infinite;
+}
+
+.streak-banner::after {
+  content: "";
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  left: -20%;
+  width: 30%;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 200, 255, 0.02) 35%,
+    rgba(0, 200, 255, 0.12) 50%,
+    rgba(0, 200, 255, 0.02) 65%,
+    transparent 100%
+  );
+  filter: blur(10px);
+  animation: tronScanGlow 4.8s linear infinite;
+}
+
+.streak-banner-left-rail {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 0;
+  width: 2px;
+  background: var(--color-accent);
+  animation: tronRailPulse 2.2s ease-in-out infinite;
+  z-index: 2;
+}
+
+.streak-banner-content {
+  position: relative;
+  z-index: 3;
+}
+
+.streak-banner-text {
+  animation: tronTextPulse 2.6s ease-in-out infinite;
+}
+
+.streak-banner-icon {
+  animation: tronIconPulse 2s ease-in-out infinite;
+}
+
 .fade-in {
   animation: fadeIn 160ms ease-out;
 }

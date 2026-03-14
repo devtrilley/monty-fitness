@@ -148,8 +148,36 @@ export default function EditRoutine() {
 
   if (fetchLoading)
     return (
-      <div className="min-h-screen bg-bg flex items-center justify-center">
-        <p className="text-muted">Loading...</p>
+      <div className="min-h-screen bg-bg">
+        <div className="sticky top-0 z-10 bg-surface border-b border-border px-4 py-3 flex items-center justify-between">
+          <div className="h-5 w-14 bg-surface-raised rounded" />
+          <div className="h-5 w-24 bg-surface-raised rounded" />
+          <div className="h-8 w-12 bg-surface-raised rounded-lg" />
+        </div>
+        <div className="px-6 py-6 pb-40 animate-pulse space-y-6">
+          <div className="space-y-2">
+            <div className="h-3 w-20 bg-surface rounded" />
+            <div className="h-12 bg-surface border border-border rounded-xl" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 w-24 bg-surface rounded" />
+            <div className="h-24 bg-surface border border-border rounded-xl" />
+          </div>
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-surface border border-border rounded-xl p-4 space-y-3"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-surface-raised rounded-full" />
+                <div className="h-4 w-36 bg-surface-raised rounded" />
+              </div>
+              {[1, 2, 3].map((j) => (
+                <div key={j} className="h-10 bg-surface-raised rounded-lg" />
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     );
 

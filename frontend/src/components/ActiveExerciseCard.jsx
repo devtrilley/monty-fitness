@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "./TronToaster";
 import ExerciseImage from "./ExerciseImage";
 import ExerciseCardMenu from "./ExerciseCardMenu";
 import { getSetLabel } from "../utils/setHelpers";
@@ -278,9 +279,28 @@ export default function ActiveExerciseCard({
 
               {/* Completion Checkbox */}
               <button
-                onClick={() =>
-                  onToggleSetCompletion(index, setIdx, restSeconds)
-                }
+                onClick={() => {
+                  if (!isCompleted) {
+                    if (
+                      set.reps === null ||
+                      set.reps === undefined ||
+                      set.reps === ""
+                    ) {
+                      toast.error("Enter reps before completing this set.");
+                      return;
+                    }
+                    if (
+                      showWeight &&
+                      (set.weight === null ||
+                        set.weight === undefined ||
+                        set.weight === "")
+                    ) {
+                      toast.error("Enter weight before completing this set.");
+                      return;
+                    }
+                  }
+                  onToggleSetCompletion(index, setIdx, restSeconds);
+                }}
                 className="h-9 w-9 rounded-lg flex items-center justify-center transition-all"
                 style={
                   isCompleted

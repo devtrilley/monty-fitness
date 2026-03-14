@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Trophy, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import TopBar from "../components/TopBar";
 import ChamferButton from "../components/ChamferButton";
@@ -110,7 +111,11 @@ export default function Challenges() {
                 "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
             }}
           >
-            <p className="text-3xl mb-3">🏆</p>
+            <Trophy
+              size={32}
+              className="mx-auto mb-3"
+              style={{ color: "var(--color-border-bright)" }}
+            />
             <p className="font-semibold text-text mb-1">No challenges yet</p>
             <p className="text-sm text-muted">Check back soon.</p>
           </div>
@@ -171,7 +176,6 @@ export default function Challenges() {
                     }}
                   />
                 </div>
-                
 
                 {joined && !completed && (
                   <p className="text-xs text-muted mb-3">
@@ -181,8 +185,11 @@ export default function Challenges() {
                   </p>
                 )}
                 {completed && (
-                  <p className="text-sm text-success mb-3 font-medium">
-                    ✅ Completed!
+                  <p
+                    className="text-sm mb-3 font-medium flex items-center gap-1.5"
+                    style={{ color: "var(--color-success)" }}
+                  >
+                    <CheckCircle size={14} /> Completed!
                   </p>
                 )}
 

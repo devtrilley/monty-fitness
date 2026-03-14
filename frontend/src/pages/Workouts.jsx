@@ -15,7 +15,7 @@ import {
 import toast from "react-hot-toast";
 import TopBar from "../components/TopBar";
 import ChamferButton from "../components/ChamferButton";
-import { FolderPlus, FilePlus2 } from "lucide-react";
+import { FolderPlus, FilePlus2, Folder, CornerUpLeft } from "lucide-react";
 
 function WorkoutsSkeleton() {
   return (
@@ -133,7 +133,10 @@ export default function Workouts() {
   const handleDiscardAndStart = async () => {
     setDiscarding(true);
     const ok = await discard();
-    if (!ok) { setDiscarding(false); return; }
+    if (!ok) {
+      setDiscarding(false);
+      return;
+    }
     setShowActiveWarning(false);
     setDiscarding(false);
     try {
@@ -607,8 +610,10 @@ export default function Workouts() {
             style={{
               background: "var(--color-surface)",
               border: "1px solid var(--color-border-bright)",
-              clipPath: "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
-              boxShadow: "0 0 48px rgba(0,0,0,0.95), 0 0 24px var(--color-accent-15)",
+              clipPath:
+                "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
+              boxShadow:
+                "0 0 48px rgba(0,0,0,0.95), 0 0 24px var(--color-accent-15)",
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -619,7 +624,8 @@ export default function Workouts() {
               Workout In Progress
             </h2>
             <p className="text-sm mb-5" style={{ color: "var(--color-muted)" }}>
-              You have an active workout. Go back to finish it, or discard it to start a new one.
+              You have an active workout. Go back to finish it, or discard it to
+              start a new one.
             </p>
             <div className="flex flex-col gap-3">
               <button
@@ -628,7 +634,8 @@ export default function Workouts() {
                 style={{
                   background: "var(--color-accent)",
                   color: "#000",
-                  clipPath: "polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px)",
+                  clipPath:
+                    "polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px)",
                   fontFamily: "monospace",
                 }}
               >
@@ -642,7 +649,8 @@ export default function Workouts() {
                   background: "rgba(239,68,68,0.12)",
                   border: "1px solid var(--color-danger)",
                   color: "var(--color-danger)",
-                  clipPath: "polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px)",
+                  clipPath:
+                    "polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px)",
                   fontFamily: "monospace",
                 }}
               >
@@ -698,7 +706,7 @@ export default function Workouts() {
                         }
                   }
                 >
-                  <span>📁</span>
+                  <Folder size={15} style={{ color: "var(--color-muted)" }} />
                   <span className="font-medium">{folder.name}</span>
                   {movingRoutine?.folder_id === folder.id && (
                     <span className="ml-auto text-accent">✓</span>
@@ -716,7 +724,10 @@ export default function Workouts() {
                       "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
                   }}
                 >
-                  <span>↩️</span>
+                  <CornerUpLeft
+                    size={15}
+                    style={{ color: "var(--color-muted)" }}
+                  />
                   <span>Move back to My Routines</span>
                 </button>
               )}

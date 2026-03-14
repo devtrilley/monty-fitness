@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Flame, Calendar, Award, Trophy, Dumbbell } from "lucide-react";
 import VolumeChart from "../components/VolumeChart";
 import TopBar from "../components/TopBar";
 import {
@@ -150,13 +151,19 @@ export default function Analytics() {
           </h2>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-text">🔥 Daily Streak</span>
+              <span className="text-text flex items-center gap-2">
+                <Flame size={14} style={{ color: "var(--color-accent)" }} />{" "}
+                Daily Streak
+              </span>
               <span className="font-bold text-text">
                 {summary.daily_streak} days
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-text">📆 Weekly Streak</span>
+              <span className="text-text flex items-center gap-2">
+                <Calendar size={14} style={{ color: "var(--color-accent)" }} />{" "}
+                Weekly Streak
+              </span>
               <span className="font-bold text-text">
                 {summary.current_weekly_streak} weeks
               </span>
@@ -183,7 +190,7 @@ export default function Analytics() {
                   border: "1px solid var(--color-accent-20)",
                 }}
               >
-                <span>🏅</span>
+                <Award size={14} style={{ color: "var(--color-accent)" }} />
                 <span className="text-sm font-medium text-accent">
                   {summary.badge}
                 </span>
@@ -267,12 +274,20 @@ export default function Analytics() {
                     </span>
                   </p>
                   {pr.equipment === "Bodyweight" ? (
-                    <p className="text-sm text-muted mt-0.5">
-                      🏆 {pr.best_reps} reps
+                    <p className="text-sm text-muted mt-0.5 flex items-center gap-1">
+                      <Trophy
+                        size={11}
+                        style={{ color: "var(--color-accent)" }}
+                      />{" "}
+                      {pr.best_reps} reps
                     </p>
                   ) : (
-                    <p className="text-sm text-muted mt-0.5">
-                      🏋️ {pr.best_weight} lbs × {pr.best_reps} reps
+                    <p className="text-sm text-muted mt-0.5 flex items-center gap-1">
+                      <Dumbbell
+                        size={11}
+                        style={{ color: "var(--color-muted)" }}
+                      />{" "}
+                      {pr.best_weight} lbs × {pr.best_reps} reps
                       <span className="ml-1 text-xs">
                         · {pr.best_volume.toLocaleString()} vol
                       </span>

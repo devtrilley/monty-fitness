@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getTemplateRoutines, saveTemplateRoutine, saveTemplateFolder } from "../utils/api";
+import {
+  getTemplateRoutines,
+  saveTemplateRoutine,
+  saveTemplateFolder,
+} from "../utils/api";
 import toast from "react-hot-toast";
 import TopBar from "../components/TopBar";
 import { ChevronDown, BookmarkPlus, FolderDown } from "lucide-react";
@@ -63,7 +67,14 @@ export default function CommunityRoutines() {
         <TopBar title="Browse Routines" showBack />
         <div className="px-5 pt-5 pb-28 animate-pulse space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 rounded-xl" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }} />
+            <div
+              key={i}
+              className="h-20 rounded-xl"
+              style={{
+                background: "var(--color-surface)",
+                border: "1px solid var(--color-border)",
+              }}
+            />
           ))}
         </div>
       </div>
@@ -74,19 +85,41 @@ export default function CommunityRoutines() {
     <div className="min-h-screen" style={{ background: "var(--color-bg)" }}>
       <TopBar title="Browse Routines" showBack />
       <div className="px-5 pt-5 pb-28">
-
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
-            <span style={{ color: "var(--color-accent)", fontFamily: "monospace", fontSize: "9px", letterSpacing: "0.3em" }}>
+            <span
+              style={{
+                color: "var(--color-accent)",
+                fontFamily: "monospace",
+                fontSize: "9px",
+                letterSpacing: "0.3em",
+              }}
+            >
               //
             </span>
-            <span style={{ color: "var(--color-muted)", fontFamily: "monospace", fontSize: "10px", letterSpacing: "0.25em", textTransform: "uppercase" }}>
+            <span
+              style={{
+                color: "var(--color-muted)",
+                fontFamily: "monospace",
+                fontSize: "10px",
+                letterSpacing: "0.25em",
+                textTransform: "uppercase",
+              }}
+            >
               Curated by {creator?.username ?? "admin"}
             </span>
           </div>
-          <p style={{ color: "var(--color-text)", fontSize: "13px", lineHeight: 1.6, marginTop: "6px" }}>
-            Not sure where to start? Pick a proven split, save it to your account, and start training today.
+          <p
+            style={{
+              color: "var(--color-text)",
+              fontSize: "13px",
+              lineHeight: 1.6,
+              marginTop: "6px",
+            }}
+          >
+            Not sure where to start? Pick a proven split, save it to your
+            account, and start training today.
           </p>
         </div>
 
@@ -104,7 +137,9 @@ export default function CommunityRoutines() {
                   background: "var(--color-surface)",
                   border: "1px solid var(--color-border)",
                   clipPath: isOpen ? chamfer(10) : chamfer(10),
-                  borderBottom: isOpen ? "1px solid var(--color-border)" : "1px solid var(--color-border)",
+                  borderBottom: isOpen
+                    ? "1px solid var(--color-border)"
+                    : "1px solid var(--color-border)",
                 }}
                 onClick={() => toggleFolder(folder.folder_id)}
               >
@@ -119,10 +154,25 @@ export default function CommunityRoutines() {
                     }}
                   />
                   <div>
-                    <p style={{ color: "var(--color-text)", fontWeight: 600, fontSize: "14px" }}>
+                    <p
+                      style={{
+                        color: "var(--color-text)",
+                        fontWeight: 600,
+                        fontSize: "14px",
+                      }}
+                    >
                       {folder.folder_name}
                     </p>
-                    <p style={{ color: "var(--color-muted)", fontFamily: "monospace", fontSize: "9px", letterSpacing: "0.2em", textTransform: "uppercase", marginTop: "2px" }}>
+                    <p
+                      style={{
+                        color: "var(--color-muted)",
+                        fontFamily: "monospace",
+                        fontSize: "9px",
+                        letterSpacing: "0.2em",
+                        textTransform: "uppercase",
+                        marginTop: "2px",
+                      }}
+                    >
                       {folder.routines.length} routines
                     </p>
                   </div>
@@ -169,14 +219,29 @@ export default function CommunityRoutines() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 {routine.icon && (
-                                  <span style={{ fontSize: "14px" }}>{routine.icon}</span>
+                                  <span style={{ fontSize: "14px" }}>
+                                    {routine.icon}
+                                  </span>
                                 )}
-                                <p style={{ color: "var(--color-text)", fontWeight: 600, fontSize: "14px" }}>
+                                <p
+                                  style={{
+                                    color: "var(--color-text)",
+                                    fontWeight: 600,
+                                    fontSize: "14px",
+                                  }}
+                                >
                                   {routine.name}
                                 </p>
                               </div>
                               {routine.description && (
-                                <p style={{ color: "var(--color-muted)", fontSize: "12px", marginTop: "4px", lineHeight: 1.5 }}>
+                                <p
+                                  style={{
+                                    color: "var(--color-muted)",
+                                    fontSize: "12px",
+                                    marginTop: "4px",
+                                    lineHeight: 1.5,
+                                  }}
+                                >
                                   {routine.description}
                                 </p>
                               )}
@@ -190,17 +255,36 @@ export default function CommunityRoutines() {
                                 <div
                                   key={i}
                                   className="w-8 h-8 overflow-hidden flex-shrink-0"
-                                  style={{ background: "var(--color-surface-raised)", clipPath: chamfer(4) }}
+                                  style={{
+                                    background: "var(--color-surface-raised)",
+                                    clipPath: chamfer(4),
+                                  }}
                                 >
-                                  <img src={url} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = "none"; }} />
+                                  <img
+                                    src={url}
+                                    alt=""
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.target.style.display = "none";
+                                    }}
+                                  />
                                 </div>
                               ))}
                               {routine.exercise_count > 4 && (
                                 <div
                                   className="w-8 h-8 flex items-center justify-center flex-shrink-0"
-                                  style={{ background: "var(--color-surface-raised)", clipPath: chamfer(4) }}
+                                  style={{
+                                    background: "var(--color-surface-raised)",
+                                    clipPath: chamfer(4),
+                                  }}
                                 >
-                                  <span style={{ color: "var(--color-muted)", fontFamily: "monospace", fontSize: "9px" }}>
+                                  <span
+                                    style={{
+                                      color: "var(--color-muted)",
+                                      fontFamily: "monospace",
+                                      fontSize: "9px",
+                                    }}
+                                  >
                                     +{routine.exercise_count - 4}
                                   </span>
                                 </div>
@@ -214,12 +298,26 @@ export default function CommunityRoutines() {
                               <div
                                 key={ex.id}
                                 className="flex items-center justify-between py-1.5"
-                                style={{ borderBottom: "1px solid var(--color-border)" }}
+                                style={{
+                                  borderBottom: "1px solid var(--color-border)",
+                                }}
                               >
-                                <span style={{ color: "var(--color-text)", fontSize: "12px" }}>
+                                <span
+                                  style={{
+                                    color: "var(--color-text)",
+                                    fontSize: "12px",
+                                  }}
+                                >
                                   {ex.exercise_name}
                                 </span>
-                                <span style={{ color: "var(--color-muted)", fontFamily: "monospace", fontSize: "10px", letterSpacing: "0.1em" }}>
+                                <span
+                                  style={{
+                                    color: "var(--color-muted)",
+                                    fontFamily: "monospace",
+                                    fontSize: "10px",
+                                    letterSpacing: "0.1em",
+                                  }}
+                                >
                                   {ex.sets?.length ?? ex.planned_sets} sets
                                 </span>
                               </div>
@@ -228,7 +326,9 @@ export default function CommunityRoutines() {
 
                           {/* Save button */}
                           <button
-                            onClick={() => handleSaveRoutine(routine.id, routine.name)}
+                            onClick={() =>
+                              handleSaveRoutine(routine.id, routine.name)
+                            }
                             disabled={isSaving}
                             className="w-full py-2.5 flex items-center justify-center gap-2 text-xs font-bold uppercase"
                             style={{
@@ -255,10 +355,22 @@ export default function CommunityRoutines() {
         {templates.length === 0 && (
           <div
             className="p-8 text-center mt-4"
-            style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", clipPath: chamfer(10) }}
+            style={{
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              clipPath: chamfer(10),
+            }}
           >
             <p className="text-3xl mb-3">📋</p>
-            <p style={{ color: "var(--color-muted)", fontFamily: "monospace", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>
+            <p
+              style={{
+                color: "var(--color-muted)",
+                fontFamily: "monospace",
+                fontSize: "10px",
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+              }}
+            >
               No templates available yet
             </p>
           </div>

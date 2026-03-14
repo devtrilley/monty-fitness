@@ -70,8 +70,26 @@ export default function WorkoutDetails() {
 
   if (!workout)
     return (
-      <div className="min-h-screen bg-bg flex items-center justify-center">
-        <p className="text-muted">Loading...</p>
+      <div className="min-h-screen bg-bg pb-20">
+        <TopBar title="Workout Details" onBack={() => navigate(-1)} />
+        <div className="px-4 py-6 animate-pulse space-y-4">
+          <div className="h-6 w-48 bg-surface rounded" />
+          <div className="h-3 w-36 bg-surface rounded" />
+          <div className="h-36 bg-surface border border-border rounded" />
+          {[1, 2].map((i) => (
+            <div
+              key={i}
+              className="p-4 bg-surface border border-border rounded space-y-3"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-surface-raised rounded" />
+                <div className="h-4 w-32 bg-surface-raised rounded" />
+              </div>
+              <div className="h-3 w-full bg-surface-raised rounded" />
+              <div className="h-3 w-3/4 bg-surface-raised rounded" />
+            </div>
+          ))}
+        </div>
       </div>
     );
 
