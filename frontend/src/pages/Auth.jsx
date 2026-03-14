@@ -215,7 +215,7 @@ export default function Auth() {
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       className={inputClass}
-                      placeholder="Tom"
+                      placeholder="John"
                     />
                   </div>
                   <div>
@@ -229,7 +229,7 @@ export default function Auth() {
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       className={inputClass}
-                      placeholder="Riley"
+                      placeholder="Smith"
                     />
                   </div>
                 </div>
@@ -278,7 +278,15 @@ export default function Auth() {
 
                 {/* Display name preference */}
                 <div>
-                  <label className={labelClass}>The app will call you...</label>
+                  <label className={labelClass}>
+                    Display name — how the app greets you
+                  </label>
+                  <p
+                    className="text-xs text-muted mb-2"
+                    style={{ letterSpacing: "0.03em" }}
+                  >
+                    Username is public. First name is personal.
+                  </p>
                   <div className="flex gap-3">
                     {[
                       { val: "username", label: `@${username || "username"}` },

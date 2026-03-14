@@ -106,31 +106,28 @@ export default function WorkoutHistoryCard({ workout }) {
             : "—"}
         </p>
       </div>
-      <div>
-        <p
-          style={{
-            color: "var(--color-muted)",
-            fontFamily: "monospace",
-            fontSize: "8px",
-            letterSpacing: "0.2em",
-            textTransform: "uppercase",
-            marginBottom: "3px",
-          }}
-        >
-          PRs
-        </p>
-        <p
-          className="text-sm font-bold"
-          style={{
-            color:
-              workout.pr_count > 0
-                ? "var(--color-accent)"
-                : "var(--color-text)",
-          }}
-        >
-          🏆 {workout.pr_count || 0}
-        </p>
-      </div>
+      {workout.pr_count > 0 && (
+        <div>
+          <p
+            style={{
+              color: "var(--color-muted)",
+              fontFamily: "monospace",
+              fontSize: "8px",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              marginBottom: "3px",
+            }}
+          >
+            PRs
+          </p>
+          <p
+            className="text-sm font-bold"
+            style={{ color: "var(--color-accent)" }}
+          >
+            🏆 {workout.pr_count}
+          </p>
+        </div>
+      )}
     </div>
   );
 
@@ -211,9 +208,9 @@ export default function WorkoutHistoryCard({ workout }) {
       {renderHeader()}
       {renderStats()}
       <div className="flex-1 flex flex-col">
-          {renderNotes()}
-          {renderExercises()}
-        </div>
+        {renderNotes()}
+        {renderExercises()}
+      </div>
     </div>
   );
 

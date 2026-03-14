@@ -18,6 +18,9 @@ export default function Profile() {
   const [firstName, setFirstName] = useState(user?.first_name || "");
   const [lastName, setLastName] = useState(user?.last_name || "");
   const [bio, setBio] = useState(user?.bio || "");
+  const [displayNamePref, setDisplayNamePref] = useState(
+    user?.display_name_preference || "username"
+  );
   const [saving, setSaving] = useState(false);
   const [workouts, setWorkouts] = useState([]);
   const [photoUploading, setPhotoUploading] = useState(false);
@@ -101,7 +104,8 @@ export default function Profile() {
         firstName,
         lastName,
         bio,
-        user?.profile_photo_url
+        user?.profile_photo_url,
+        displayNamePref
       );
       setUser(updatedUser.user);
       toast.success("Profile updated.");
@@ -245,6 +249,44 @@ export default function Profile() {
             className="w-full px-3 py-2.5 bg-surface-raised border border-border rounded-lg text-sm text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent resize-none transition-all"
             placeholder="Tell us about yourself..."
           />
+          <div className="mt-4 mb-1">
+            <label className="block text-sm font-medium text-muted mb-2">
+              Display name
+            </label>
+            <div className="flex gap-3">
+              {[
+                { val: "username", label: "Username" },
+                { val: "first_name", label: "First Name" },
+              ].map(({ val, label }) => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setDisplayNamePref(val)}
+                  className="flex-1 py-2 text-sm font-bold tracking-[0.12em] uppercase transition-all active:scale-[0.98]"
+                  style={{
+                    clipPath:
+                      "polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px)",
+                    background:
+                      displayNamePref === val
+                        ? "var(--color-accent)"
+                        : "transparent",
+                    color:
+                      displayNamePref === val ? "#000" : "var(--color-muted)",
+                    border:
+                      displayNamePref === val
+                        ? "none"
+                        : "1px solid var(--color-border)",
+                    fontFamily: "monospace",
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted mt-1.5">
+              This is how the app will refer to you.
+            </p>
+          </div>
           <ChamferButton
             onClick={handleSave}
             disabled={saving}

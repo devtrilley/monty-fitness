@@ -236,8 +236,8 @@ export default function WorkoutDetails() {
                       </span>
                       <p className="text-sm text-text">
                         {ex.exercise?.equipment !== "Bodyweight"
-                          ? `${set.weight || 0} lbs × ${set.reps} reps`
-                          : `${set.reps} reps`}
+                          ? `${set.weight || 0} lbs × ${set.reps ?? "—"} reps`
+                          : `${set.reps ?? "—"} reps`}
                       </p>
                     </div>
                     {set.is_pr && set.pr_type && (

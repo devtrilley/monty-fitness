@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useWorkout } from "../context/WorkoutContext";
 import SaveWorkoutPanel from "./SaveWorkoutPanel";
@@ -389,54 +389,72 @@ export default function ActiveWorkoutOverlay({ fromMini = false }) {
         )}
 
         {/* Rest Timer */}
-        {Object.keys(restTimers).length > 0 && !reorderMode && (
-          <div className="px-6 py-2 border-b border-border">
-            <div className="flex items-center justify-between gap-2 bg-accent-subtle rounded-lg p-2">
-              <button
-                onClick={() => setRestTimers({})}
-                className="px-3 py-1 bg-accent text-white rounded-md font-medium text-sm"
-              >
-                Skip
-              </button>
-              <div className="flex-1 text-center">
-                <p className="text-sm text-accent font-medium">
-                  Rest: {formatRestTime(Object.values(restTimers)[0])}
-                </p>
-              </div>
-              <div className="flex gap-2">
+        <AnimatePresence>
+          {Object.keys(restTimers).length > 0 && !reorderMode && (
+            <motion.div
+              key="rest-timer"
+              className="px-6 py-2 border-b border-border"
+              initial={{
+                opacity: 0,
+                height: 0,
+                paddingTop: 0,
+                paddingBottom: 0,
+              }}
+              animate={{
+                opacity: 1,
+                height: "auto",
+                paddingTop: 8,
+                paddingBottom: 8,
+              }}
+              exit={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+            >
+              <div className="flex items-center justify-between gap-2 bg-accent-subtle rounded-lg p-2">
                 <button
-                  onClick={() => {
-                    const key = Object.keys(restTimers)[0];
-                    setRestTimers((prev) => {
-                      const v = prev[key] - 15;
-                      if (v <= 0) {
-                        playChime();
-                        return {};
-                      }
-                      return { ...prev, [key]: v };
-                    });
-                  }}
-                  className="px-3 py-1 bg-surface-raised text-text rounded-md font-medium text-sm"
+                  onClick={() => setRestTimers({})}
+                  className="px-3 py-1 bg-accent text-white rounded-md font-medium text-sm"
                 >
-                  -15
+                  Skip
                 </button>
-                <button
-                  onClick={() => {
-                    const key = Object.keys(restTimers)[0];
-                    setRestTimers((prev) => ({
-                      ...prev,
-                      [key]: prev[key] + 15,
-                    }));
-                  }}
-                  className="px-3 py-1 bg-surface-raised text-text rounded-md font-medium text-sm"
-                >
-                  +15
-                </button>
+                <div className="flex-1 text-center">
+                  <p className="text-sm text-accent font-medium">
+                    Rest: {formatRestTime(Object.values(restTimers)[0])}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const key = Object.keys(restTimers)[0];
+                      setRestTimers((prev) => {
+                        const v = prev[key] - 15;
+                        if (v <= 0) {
+                          playChime();
+                          return {};
+                        }
+                        return { ...prev, [key]: v };
+                      });
+                    }}
+                    className="px-3 py-1 bg-surface-raised text-text rounded-md font-medium text-sm"
+                  >
+                    -15
+                  </button>
+                  <button
+                    onClick={() => {
+                      const key = Object.keys(restTimers)[0];
+                      setRestTimers((prev) => ({
+                        ...prev,
+                        [key]: prev[key] + 15,
+                      }));
+                    }}
+                    className="px-3 py-1 bg-surface-raised text-text rounded-md font-medium text-sm"
+                  >
+                    +15
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
-
+            </motion.div>
+          )}
+        </AnimatePresence>
         {/* Collapse Toggle */}
         {!reorderMode && (
           <button

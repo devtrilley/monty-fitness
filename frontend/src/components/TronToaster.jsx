@@ -8,6 +8,7 @@ function TronToast({ t }) {
 
   return (
     <div
+      onClick={() => hotToast.dismiss(t.id)}
       style={{
         display: "flex",
         alignItems: "center",
@@ -15,9 +16,10 @@ function TronToast({ t }) {
         background: "#0a0a0a",
         border: `2px solid ${accentColor}`,
         color: "#e8f4f8",
-        padding: "14px 20px",
+        padding: "10px 16px",
         fontFamily: "monospace",
-        fontSize: "13px",
+        fontSize: "12px",
+        cursor: "pointer",
         fontWeight: 500,
         letterSpacing: "0.05em",
         borderRadius: "4px",
@@ -69,8 +71,8 @@ function TronToast({ t }) {
       {/* Icon */}
       <div
         style={{
-          width: "24px",
-          height: "24px",
+          width: "20px",
+          height: "20px",
           borderRadius: "4px",
           background: `${accentColor}20`,
           border: `1px solid ${accentColor}60`,

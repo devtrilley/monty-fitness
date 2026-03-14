@@ -335,7 +335,8 @@ def update_profile(user):
         user.bio = data["bio"]
     if "profile_photo_url" in data:
         user.profile_photo_url = data["profile_photo_url"]
-
+    if "display_name_preference" in data and data["display_name_preference"] in ("username", "first_name"):
+        user.display_name_preference = data["display_name_preference"]
     db.session.commit()
     return jsonify({"message": "Profile updated", "user": user.to_dict()}), 200
 
@@ -1218,9 +1219,7 @@ def finish_workout(user, session_id):
 
             # Which existing set IDs are still completed
             completed_set_ids = {
-                s["workout_set_id"]
-                for s in sets_data
-                if s.get("workout_set_id")
+                s["workout_set_id"] for s in sets_data if s.get("workout_set_id")
             }
 
             # Delete uncompleted DB sets
@@ -1242,14 +1241,16 @@ def finish_workout(user, session_id):
                     ws.set_type = set_data.get("set_type", "normal")
                 else:
                     # New set added to existing exercise
-                    db.session.add(WorkoutSet(
-                        workout_exercise_id=workout_ex.id,
-                        set_number=len(workout_ex.sets) + 1,
-                        weight=set_data.get("weight"),
-                        reps=set_data.get("reps"),
-                        rir=set_data.get("rir"),
-                        set_type=set_data.get("set_type", "normal"),
-                    ))
+                    db.session.add(
+                        WorkoutSet(
+                            workout_exercise_id=workout_ex.id,
+                            set_number=len(workout_ex.sets) + 1,
+                            weight=set_data.get("weight"),
+                            reps=set_data.get("reps"),
+                            rir=set_data.get("rir"),
+                            set_type=set_data.get("set_type", "normal"),
+                        )
+                    )
         else:
             # ── New exercise added during workout ──────────────────────────
             exercise_id = ex_data.get("exercise_id")
@@ -1263,14 +1264,16 @@ def finish_workout(user, session_id):
             db.session.add(workout_ex)
             db.session.flush()
             for set_num, set_data in enumerate(sets_data, start=1):
-                db.session.add(WorkoutSet(
-                    workout_exercise_id=workout_ex.id,
-                    set_number=set_num,
-                    weight=set_data.get("weight"),
-                    reps=set_data.get("reps"),
-                    rir=set_data.get("rir"),
-                    set_type=set_data.get("set_type", "normal"),
-                ))
+                db.session.add(
+                    WorkoutSet(
+                        workout_exercise_id=workout_ex.id,
+                        set_number=set_num,
+                        weight=set_data.get("weight"),
+                        reps=set_data.get("reps"),
+                        rir=set_data.get("rir"),
+                        set_type=set_data.get("set_type", "normal"),
+                    )
+                )
 
     # Delete existing exercises that had zero completed sets
     db.session.flush()
@@ -2100,23 +2103,31 @@ def seed_athletes():
     athletes = [
         {
             "username": "weightlifter_mike",
+            "first_name": "Mike",
+            "last_name": "Riley",
             "email": "mike@test.com",
             "password": "mike123",
             "bio": "Powerlifting and bodybuilding. Chasing that 500lb deadlift.",
+            "display_name_preference": "first_name",
         },
         {
             "username": "calisthenics_sara",
+            "first_name": "Sara",
+            "last_name": "Chen",
             "email": "sara@test.com",
             "password": "sara123",
             "bio": "Bodyweight movements only. Pull-ups, muscle-ups, handstands.",
+            "display_name_preference": "username",
         },
     ]
-
     for athlete_data in athletes:
         user = User(
             username=athlete_data["username"],
+            first_name=athlete_data["first_name"],
+            last_name=athlete_data["last_name"],
             email=athlete_data["email"],
             bio=athlete_data["bio"],
+            display_name_preference=athlete_data["display_name_preference"],
         )
         user.set_password(athlete_data["password"])
         db.session.add(user)
@@ -2205,19 +2216,32 @@ def fresh():
     athletes = [
         {
             "username": "weightlifter_mike",
+            "first_name": "Mike",
+            "last_name": "Riley",
             "email": "mike@test.com",
             "password": "mike123",
             "bio": "Powerlifting and bodybuilding.",
+            "display_name_preference": "first_name",
         },
         {
             "username": "calisthenics_sara",
+            "first_name": "Sara",
+            "last_name": "Chen",
             "email": "sara@test.com",
             "password": "sara123",
             "bio": "Bodyweight movements only.",
+            "display_name_preference": "username",
         },
     ]
     for a in athletes:
-        u = User(username=a["username"], email=a["email"], bio=a["bio"])
+        u = User(
+            username=a["username"],
+            first_name=a["first_name"],
+            last_name=a["last_name"],
+            email=a["email"],
+            bio=a["bio"],
+            display_name_preference=a["display_name_preference"],
+        )
         u.set_password(a["password"])
         db.session.add(u)
     db.session.commit()

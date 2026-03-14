@@ -75,7 +75,12 @@ export default function Dashboard() {
   }, [location.state?.refresh]); // re-fetch when navigated here after save
 
   useEffect(() => {
-    if (!loaded || !user?.username) return;
+    if (!loaded || !user) return;
+    const displayName =
+      user.display_name_preference === "first_name" && user.first_name
+        ? user.first_name
+        : user.username;
+    if (!displayName) return;
     const greetings = [
       "WELCOME BACK",
       "LET'S GET TO WORK",
@@ -84,7 +89,7 @@ export default function Dashboard() {
       "NO DAYS OFF",
     ];
     const chosen = greetings[Math.floor(Math.random() * greetings.length)];
-    const target = `${chosen}, ${user.username.toUpperCase()}!`;
+    const target = `${chosen}, ${displayName.toUpperCase()}!`;
     let i = 0;
     setTypedText("");
     const interval = setInterval(() => {
@@ -139,11 +144,7 @@ export default function Dashboard() {
                 background: "var(--color-accent)",
                 marginLeft: "2px",
                 verticalAlign: "middle",
-                opacity:
-                  typedText.length ===
-                  `WELCOME BACK, ${user?.username?.toUpperCase()}`.length
-                    ? 0
-                    : 1,
+                opacity: typedText.endsWith("!") ? 0 : 1,
               }}
             />
           </span>

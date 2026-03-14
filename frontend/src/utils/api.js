@@ -131,14 +131,19 @@ export const updateProfile = async (
   firstName,
   lastName,
   bio,
-  profilePhotoUrl
+  profilePhotoUrl,
+  displayNamePref
 ) => {
-  const { data } = await api.put("/auth/me", {
+  const body = {
     first_name: firstName,
     last_name: lastName,
     bio,
     profile_photo_url: profilePhotoUrl,
-  });
+  };
+  if (displayNamePref !== undefined) {
+    body.display_name_preference = displayNamePref;
+  }
+  const { data } = await api.put("/auth/me", body);
   return data;
 };
 
