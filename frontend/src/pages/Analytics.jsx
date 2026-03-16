@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Flame, Calendar, Award, Trophy, Dumbbell } from "lucide-react";
 import VolumeChart from "../components/VolumeChart";
 import TopBar from "../components/TopBar";
@@ -63,10 +64,11 @@ function AnalyticsSkeleton() {
 }
 
 export default function Analytics() {
+  const navigate = useNavigate();
   const [summary, setSummary] = useState(null);
   const [prs, setPrs] = useState([]);
   const [volumeData, setVolumeData] = useState([]);
-  const [timeRange, setTimeRange] = useState("3months");
+  const [timeRange, setTimeRange] = useState("month");
   const [loading, setLoading] = useState(true);
 
   const fetchAnalytics = useCallback(async () => {
@@ -231,6 +233,8 @@ export default function Analytics() {
                 letterSpacing: "0.1em",
               }}
             >
+              <option value="week">This Week</option>
+              <option value="month">Last Month</option>
               <option value="3months">Last 3 Months</option>
               <option value="1year">Last Year</option>
               <option value="alltime">All Time</option>
@@ -257,9 +261,10 @@ export default function Analytics() {
           </h2>
           <div className="space-y-3">
             {prs.slice(0, 10).map((pr) => (
-              <div
+              <button
                 key={pr.exercise_id}
-                className="flex items-center gap-3 border-b border-border pb-3 last:border-0 last:pb-0"
+                onClick={() => navigate(`/exercises/${pr.exercise_id}/history`)}
+                className="w-full flex items-center gap-3 border-b border-border pb-3 last:border-0 last:pb-0 text-left active:opacity-70 transition-opacity"
               >
                 <ExerciseImage
                   imageUrl={pr.image_url}
@@ -294,7 +299,7 @@ export default function Analytics() {
                     </p>
                   )}
                 </div>
-              </div>
+              </button>
             ))}
             {prs.length === 0 && (
               <p className="text-sm text-muted text-center py-6">

@@ -26,6 +26,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import Legal from "./pages/Legal";
 import CommunityRoutines from "./pages/CommunityRoutines";
+import ExerciseHistory from "./pages/ExerciseHistory";
 import BottomNav from "./components/BottomNav";
 import TronToaster from "./components/TronToaster";
 import { WorkoutProvider } from "./context/WorkoutContext";
@@ -189,6 +190,14 @@ function AppRoutes() {
               element={
                 <ProtectedRoute>
                   <CommunityRoutines />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/exercises/:id/history"
+              element={
+                <ProtectedRoute>
+                  <ExerciseHistory />
                 </ProtectedRoute>
               }
             />

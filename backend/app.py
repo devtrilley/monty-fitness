@@ -1470,6 +1470,87 @@ def get_active_session(user, session_id):
 
 
 # ============================================
+# EXERCISE HISTORY ROUTE
+# ============================================
+@app.route("/api/exercises/<int:exercise_id>/history", methods=["GET"])
+@jwt_required_custom
+def get_exercise_history(user, exercise_id):
+    """Get all workout history for a specific exercise"""
+    exercise = Exercise.query.get(exercise_id)
+    if not exercise:
+        return jsonify({"error": "Exercise not found"}), 404
+
+    workout_exercises = (
+        WorkoutExercise.query.join(
+            WorkoutSession, WorkoutSession.id == WorkoutExercise.session_id
+        )
+        .filter(
+            WorkoutSession.user_id == user.id,
+            WorkoutSession.status == "completed",
+            WorkoutExercise.exercise_id == exercise_id,
+        )
+        .order_by(WorkoutSession.session_date.desc())
+        .limit(20)
+        .all()
+    )
+
+    history = []
+    for we in workout_exercises:
+        history.append(
+            {
+                "session_id": we.session_id,
+                "session_name": we.session.name,
+                "session_date": we.session.session_date.replace(
+                    tzinfo=timezone.utc
+                ).isoformat(),
+                "sets": [s.to_dict() for s in we.sets],
+            }
+        )
+
+    # PRs
+    pr_query = (
+        db.session.query(
+            func.max(WorkoutSet.weight).label("best_weight"),
+            func.max(WorkoutSet.reps).label("best_reps"),
+            func.max(WorkoutSet.weight * WorkoutSet.reps).label("best_volume"),
+        )
+        .join(WorkoutExercise, WorkoutExercise.id == WorkoutSet.workout_exercise_id)
+        .join(WorkoutSession, WorkoutSession.id == WorkoutExercise.session_id)
+        .filter(
+            WorkoutSession.user_id == user.id,
+            WorkoutSession.status == "completed",
+            WorkoutExercise.exercise_id == exercise_id,
+            WorkoutSet.weight.isnot(None),
+            WorkoutSet.reps.isnot(None),
+        )
+        .first()
+    )
+
+    return (
+        jsonify(
+            {
+                "exercise": exercise.to_dict(),
+                "history": history,
+                "prs": {
+                    "best_weight": (
+                        float(pr_query.best_weight)
+                        if pr_query and pr_query.best_weight
+                        else None
+                    ),
+                    "best_reps": pr_query.best_reps if pr_query else None,
+                    "best_volume": (
+                        float(pr_query.best_volume)
+                        if pr_query and pr_query.best_volume
+                        else None
+                    ),
+                },
+            }
+        ),
+        200,
+    )
+
+
+# ============================================
 # ANALYTICS ROUTES
 # ============================================
 
@@ -1592,7 +1673,11 @@ def get_volume_analytics(user):
 
     # Determine date range
     today = date.today()
-    if range_param == "1year":
+    if range_param == "week":
+        start_date = today - timedelta(days=7)
+    elif range_param == "month":
+        start_date = today - timedelta(days=30)
+    elif range_param == "1year":
         start_date = today - timedelta(days=365)
     elif range_param == "alltime":
         start_date = None
@@ -1617,17 +1702,17 @@ def get_volume_analytics(user):
             if hasattr(session.session_date, "date")
             else session.session_date
         )
-        week_key = session_date.strftime("%Y-W%U")
-
-        weeks[week_key]["volume"] += session.calculate_total_volume()
-        weeks[week_key]["duration"] += session.duration_minutes or 0
-        weeks[week_key]["workouts"] += 1
-
-        # Count total reps
+        if range_param in ("week", "month"):
+            bucket_key = session_date.strftime("%Y-%m-%d")
+        else:
+            bucket_key = session_date.strftime("%Y-W%U")
+        weeks[bucket_key]["volume"] += session.calculate_total_volume()
+        weeks[bucket_key]["duration"] += session.duration_minutes or 0
+        weeks[bucket_key]["workouts"] += 1
         for ex in session.workout_exercises:
             for set_data in ex.sets:
                 if set_data.reps:
-                    weeks[week_key]["reps"] += set_data.reps
+                    weeks[bucket_key]["reps"] += set_data.reps
 
     # Format for frontend
     data = [

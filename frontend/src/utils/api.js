@@ -292,6 +292,11 @@ export const getPersonalRecords = async () => {
   return data.prs;
 };
 
+export const getExerciseHistory = async (exerciseId) => {
+  const { data } = await api.get(`/exercises/${exerciseId}/history`);
+  return data;
+};
+
 export const getChallengeProgress = async () => {
   const { data } = await api.get("/challenges/progress");
   return data.progress;

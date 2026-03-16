@@ -404,34 +404,70 @@ export default function Dashboard() {
         >
           Start Workout
         </button>
-        <button
-          onClick={() => navigate("/analytics")}
-          className="w-full py-3 mb-3 text-sm uppercase font-medium transition-all flex items-center justify-center gap-2 active:opacity-70"
-          style={{
-            background: "transparent",
-            color: "var(--color-muted)",
-            border: "1px solid var(--color-border)",
-            clipPath: chamfer(8),
-            letterSpacing: "0.15em",
-          }}
-        >
-          <BarChart3 size={14} />
-          View Analytics
-        </button>
-        <button
-          onClick={() => navigate("/browse-routines")}
-          className="w-full py-3 mb-8 text-sm uppercase font-medium transition-all flex items-center justify-center gap-2 active:opacity-70"
-          style={{
-            background: "transparent",
-            color: "var(--color-muted)",
-            border: "1px solid var(--color-border)",
-            clipPath: chamfer(8),
-            letterSpacing: "0.15em",
-          }}
-        >
-          <BookOpen size={14} />
-          Browse Routines
-        </button>
+        <div className="grid grid-cols-2 gap-3 mb-8">
+          <button
+            onClick={() => navigate("/analytics")}
+            className="flex flex-col items-start gap-2 p-4 transition-all active:scale-[0.97]"
+            style={{
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              clipPath: chamfer(8),
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              className="w-8 h-8 flex items-center justify-center"
+              style={{
+                background: "var(--color-accent-subtle)",
+                border: "1px solid var(--color-accent-30)",
+                clipPath: chamfer(4),
+              }}
+            >
+              <BarChart3 size={15} style={{ color: "var(--color-accent)" }} />
+            </div>
+            <div className="text-left">
+              <p
+                className="text-xs font-bold uppercase tracking-[0.15em] text-text"
+                style={{ fontFamily: "monospace" }}
+              >
+                Analytics
+              </p>
+              <p className="text-[10px] text-muted mt-0.5">Stats & PRs</p>
+            </div>
+          </button>
+          <button
+            onClick={() => navigate("/browse-routines")}
+            className="flex flex-col items-start gap-2 p-4 transition-all active:scale-[0.97]"
+            style={{
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              clipPath: chamfer(8),
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              className="w-8 h-8 flex items-center justify-center"
+              style={{
+                background: "var(--color-accent-subtle)",
+                border: "1px solid var(--color-accent-30)",
+                clipPath: chamfer(4),
+              }}
+            >
+              <BookOpen size={15} style={{ color: "var(--color-accent)" }} />
+            </div>
+            <div className="text-left">
+              <p
+                className="text-xs font-bold uppercase tracking-[0.15em] text-text"
+                style={{ fontFamily: "monospace" }}
+              >
+                Routines
+              </p>
+              <p className="text-[10px] text-muted mt-0.5">Browse splits</p>
+            </div>
+          </button>
+        </div>
 
         {/* Recent Activity */}
         <div>

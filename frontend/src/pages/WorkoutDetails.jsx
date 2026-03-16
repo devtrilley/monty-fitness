@@ -235,12 +235,20 @@ export default function WorkoutDetails() {
                   imageUrl={ex.exercise?.image_url}
                   name={ex.exercise?.name}
                 />
+                <button
+                className="text-left"
+                onClick={() => navigate(`/exercises/${ex.exercise_id}/history`)}
+              >
                 <h2 className="font-semibold text-text">
                   {ex.exercise.name}
                   <span className="text-xs font-normal text-muted ml-2">
                     ({ex.exercise.equipment})
                   </span>
                 </h2>
+                <p className="text-[10px] text-accent" style={{ fontFamily: "monospace", letterSpacing: "0.1em" }}>
+                  VIEW HISTORY →
+                </p>
+              </button>
               </div>
               <div className="space-y-1">
                 {ex.sets.map((set, idx) => (
