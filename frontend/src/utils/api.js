@@ -132,7 +132,8 @@ export const updateProfile = async (
   lastName,
   bio,
   profilePhotoUrl,
-  displayNamePref
+  displayNamePref,
+  hideRir
 ) => {
   const body = {
     first_name: firstName,
@@ -143,7 +144,15 @@ export const updateProfile = async (
   if (displayNamePref !== undefined) {
     body.display_name_preference = displayNamePref;
   }
+  if (hideRir !== undefined) {
+    body.hide_rir = hideRir;
+  }
   const { data } = await api.put("/auth/me", body);
+  return data;
+};
+
+export const updateWorkout = async (workoutId, updates) => {
+  const { data } = await api.patch(`/workouts/${workoutId}`, updates);
   return data;
 };
 

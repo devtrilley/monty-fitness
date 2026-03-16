@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "./TronToaster";
+import { useAuth } from "../context/AuthContext";
 import ExerciseImage from "./ExerciseImage";
 import ExerciseCardMenu from "./ExerciseCardMenu";
 import { getSetLabel } from "../utils/setHelpers";
@@ -49,6 +50,7 @@ export default function ActiveExerciseCard({
   onToggleSetCompletion,
   onUpdateSet,
   onAddSet,
+  onRemoveSet,
   onReplace,
   onRemove,
   onReorder,
@@ -59,9 +61,28 @@ export default function ActiveExerciseCard({
   onLongPressStart,
   onLongPressEnd,
 }) {
+  const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notesMode, setNotesMode] = useState("exercise"); // "exercise" | "set"
+  const [swipedSetIdx, setSwipedSetIdx] = useState(null);
+  const swipeStartX = useRef(null);
   const showWeight = exercise.exercise?.equipment !== "Bodyweight";
+  const hideRir = user?.hide_rir || false;
   const restSeconds = customRestSeconds || exercise.rest_seconds || 120;
+
+  const handleSetTouchStart = (e, setIdx) => {
+    swipeStartX.current = e.touches[0].clientX;
+  };
+  const handleSetTouchEnd = (e, setIdx) => {
+    if (swipeStartX.current === null) return;
+    const diff = swipeStartX.current - e.changedTouches[0].clientX;
+    if (diff > 60) {
+      setSwipedSetIdx(setIdx);
+    } else if (diff < -20) {
+      setSwipedSetIdx(null);
+    }
+    swipeStartX.current = null;
+  };
 
   return (
     <div
@@ -151,27 +172,65 @@ export default function ActiveExerciseCard({
         </button>
       </div>
 
-      {/* Notes */}
-      <textarea
-        placeholder="Add notes..."
-        rows={2}
-        className="w-full text-sm text-text mb-3 px-2 py-1 border border-border bg-surface-raised rounded focus:outline-none focus:border-accent resize-none max-h-24 placeholder:text-muted"
-      />
-
+      {/* Notes mode toggle */}
+      <div className="flex items-center gap-2 mb-2">
+        {["exercise", "set"].map((mode) => (
+          <button
+            key={mode}
+            onClick={() => setNotesMode(mode)}
+            className="text-[10px] uppercase tracking-[0.12em] px-2 py-1 transition-all"
+            style={{
+              background:
+                notesMode === mode
+                  ? "var(--color-accent-subtle)"
+                  : "transparent",
+              color:
+                notesMode === mode
+                  ? "var(--color-accent)"
+                  : "var(--color-muted)",
+              border: `1px solid ${
+                notesMode === mode
+                  ? "var(--color-accent-30)"
+                  : "var(--color-border)"
+              }`,
+              borderRadius: "4px",
+              fontFamily: "monospace",
+            }}
+          >
+            {mode === "exercise" ? "Exercise Note" : "Per-Set Notes"}
+          </button>
+        ))}
+      </div>
+      {/* Exercise Notes */}
+      {notesMode === "exercise" && (
+        <textarea
+          placeholder="Add exercise notes..."
+          rows={2}
+          value={exercise.notes || ""}
+          onChange={(e) =>
+            onUpdateSet(index, -1, "exerciseNotes", e.target.value)
+          }
+          className="w-full text-sm text-text mb-3 px-2 py-1 border border-border bg-surface-raised rounded focus:outline-none focus:border-accent resize-none max-h-24 placeholder:text-muted"
+        />
+      )}
       {/* Sets Table */}
       <div className="space-y-2">
         {/* Header */}
         <div
           className={`grid ${
-            showWeight
+            showWeight && !hideRir
               ? "grid-cols-[35px_64px_62px_62px_42px]"
-              : "grid-cols-[35px_62px_62px_42px]"
+              : showWeight && hideRir
+              ? "grid-cols-[35px_64px_62px_42px]"
+              : !hideRir
+              ? "grid-cols-[35px_62px_62px_42px]"
+              : "grid-cols-[35px_62px_42px]"
           } gap-1.5 text-[10px] font-medium text-muted uppercase`}
         >
           <div className="text-center">SET</div>
           {showWeight && <div className="text-center">LBS</div>}
           <div className="text-center">REPS</div>
-          <div className="text-center">RIR</div>
+          {!hideRir && <div className="text-center">RIR</div>}
           <div className="text-center">✓</div>
         </div>
 
@@ -180,148 +239,191 @@ export default function ActiveExerciseCard({
           const setKey = `${index}-${setIdx}`;
           const isCompleted = completedSets.has(setKey);
           const lastSet = exercise.last_performance?.[setIdx];
-
+          const isSwiped = swipedSetIdx === setIdx;
           return (
-            <div
-              key={set.id}
-              className={`grid ${
-                showWeight
-                  ? "grid-cols-[35px_64px_62px_62px_42px]"
-                  : "grid-cols-[35px_62px_62px_42px]"
-              } gap-1.5 items-center rounded-md -mx-4 px-4 py-1 transition-colors`}
-              style={{
-                background: isCompleted
-                  ? "rgba(34,197,94,0.12)"
-                  : setIdx % 2 === 0
-                  ? "var(--color-surface-raised)"
-                  : "var(--color-surface)",
-                borderLeft: isCompleted
-                  ? "2px solid var(--color-success)"
-                  : "none",
-              }}
-            >
-              {/* Set Type Button */}
-              <button
-                onClick={() => onOpenSetTypeModal(index, setIdx)}
-                disabled={isCompleted}
-                className={`font-medium text-center h-9 w-9 rounded-lg transition-all ${
-                  isCompleted
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:opacity-80"
-                }`}
-                style={getSetStyle(set.set_type)}
+            <div key={set.id} className="relative overflow-hidden rounded-md">
+              {/* Swipe delete reveal */}
+              {isSwiped && onRemoveSet && !isCompleted && (
+                <button
+                  onClick={() => {
+                    setSwipedSetIdx(null);
+                    onRemoveSet(index, setIdx);
+                  }}
+                  className="absolute right-0 top-0 bottom-0 flex items-center justify-center px-4 z-10"
+                  style={{
+                    background: "var(--color-danger)",
+                    color: "#fff",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                  }}
+                >
+                  Delete
+                </button>
+              )}
+              <div
+                onTouchStart={(e) => handleSetTouchStart(e, setIdx)}
+                onTouchEnd={(e) => handleSetTouchEnd(e, setIdx)}
+                onClick={() => swipedSetIdx !== null && setSwipedSetIdx(null)}
+                className={`grid ${
+                  showWeight && !hideRir
+                    ? "grid-cols-[35px_64px_62px_62px_42px]"
+                    : showWeight && hideRir
+                    ? "grid-cols-[35px_64px_62px_42px]"
+                    : !hideRir
+                    ? "grid-cols-[35px_62px_62px_42px]"
+                    : "grid-cols-[35px_62px_42px]"
+                } gap-1.5 items-center -mx-4 px-4 py-1 transition-all`}
+                style={{
+                  background: isCompleted
+                    ? "rgba(34,197,94,0.12)"
+                    : setIdx % 2 === 0
+                    ? "var(--color-surface-raised)"
+                    : "var(--color-surface)",
+                  borderLeft: isCompleted
+                    ? "2px solid var(--color-success)"
+                    : "none",
+                  transform: isSwiped ? "translateX(-80px)" : "translateX(0)",
+                  transition: "transform 0.2s ease",
+                }}
               >
-                {getSetLabel(exercise.sets, setIdx)}
-              </button>
+                {/* Set Type Button */}
+                <button
+                  onClick={() => onOpenSetTypeModal(index, setIdx)}
+                  disabled={isCompleted}
+                  className={`font-medium text-center h-9 w-9 rounded-lg transition-all ${
+                    isCompleted
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:opacity-80"
+                  }`}
+                  style={getSetStyle(set.set_type)}
+                >
+                  {getSetLabel(exercise.sets, setIdx)}
+                </button>
 
-              {/* Weight Input */}
-              {showWeight && (
+                {/* Weight Input */}
+                {showWeight && (
+                  <input
+                    type="number"
+                    value={set.weight ?? ""}
+                    min="0"
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      onUpdateSet(
+                        index,
+                        setIdx,
+                        "weight",
+                        v === "" ? null : Math.max(0, parseFloat(v))
+                      );
+                    }}
+                    onWheel={(e) => e.target.blur()}
+                    disabled={isCompleted}
+                    placeholder={lastSet?.weight ? String(lastSet.weight) : "—"}
+                    className="h-9 px-1 border border-border bg-surface-raised text-text rounded-lg text-xs text-center placeholder:text-muted disabled:opacity-40 disabled:cursor-not-allowed"
+                  />
+                )}
+
+                {/* Reps Input */}
                 <input
                   type="number"
-                  value={set.weight ?? ""}
+                  value={set.reps ?? ""}
                   min="0"
                   onChange={(e) => {
                     const v = e.target.value;
                     onUpdateSet(
                       index,
                       setIdx,
-                      "weight",
-                      v === "" ? null : Math.max(0, parseFloat(v))
+                      "reps",
+                      v === "" ? null : Math.max(0, parseInt(v))
                     );
                   }}
                   onWheel={(e) => e.target.blur()}
                   disabled={isCompleted}
-                  placeholder={lastSet?.weight ? String(lastSet.weight) : "—"}
-                  className="h-9 px-1 border border-border bg-surface-raised text-text rounded-lg text-xs text-center placeholder:text-muted disabled:opacity-40 disabled:cursor-not-allowed"
+                  placeholder={lastSet?.reps ? String(lastSet.reps) : "—"}
+                  className="h-9 px-2 border border-border bg-surface-raised text-text rounded-lg text-sm text-center placeholder:text-muted disabled:opacity-40 disabled:cursor-not-allowed"
+                />
+
+                {/* RIR Input */}
+                {!hideRir && (
+                  <input
+                    type="number"
+                    value={set.rir ?? ""}
+                    min="0"
+                    max="10"
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      onUpdateSet(
+                        index,
+                        setIdx,
+                        "rir",
+                        v === "" ? null : Math.max(0, parseInt(v))
+                      );
+                    }}
+                    onWheel={(e) => e.target.blur()}
+                    disabled={isCompleted}
+                    placeholder="—"
+                    className="h-9 px-2 border border-border bg-surface-raised text-text rounded-lg text-sm text-center placeholder:text-muted disabled:opacity-40 disabled:cursor-not-allowed"
+                  />
+                )}
+
+                {/* Completion Checkbox */}
+                <button
+                  onClick={() => {
+                    if (!isCompleted) {
+                      if (
+                        set.reps === null ||
+                        set.reps === undefined ||
+                        set.reps === ""
+                      ) {
+                        toast.error("Enter reps before completing this set.");
+                        return;
+                      }
+                      if (
+                        showWeight &&
+                        (set.weight === null ||
+                          set.weight === undefined ||
+                          set.weight === "")
+                      ) {
+                        toast.error("Enter weight before completing this set.");
+                        return;
+                      }
+                    }
+                    onToggleSetCompletion(index, setIdx, restSeconds);
+                  }}
+                  className="h-9 w-9 rounded-lg flex items-center justify-center transition-all"
+                  style={
+                    isCompleted
+                      ? {
+                          background: "var(--color-accent)",
+                          border: "2px solid var(--color-accent)",
+                          color: "#fff",
+                          boxShadow: "0 0 8px var(--color-accent-60)",
+                        }
+                      : {
+                          border: "2px solid var(--color-border)",
+                          color: "var(--color-muted)",
+                        }
+                  }
+                >
+                  {isCompleted && "✓"}
+                </button>
+              </div>
+              {/* Per-set notes */}
+              {notesMode === "set" && (
+                <input
+                  type="text"
+                  value={set.notes || ""}
+                  onChange={(e) =>
+                    onUpdateSet(index, setIdx, "notes", e.target.value)
+                  }
+                  placeholder="Set note..."
+                  disabled={isCompleted}
+                  className="w-full text-xs text-text px-2 py-1 mt-0.5 border-t border-border bg-surface-raised focus:outline-none placeholder:text-muted"
+                  style={{ borderRadius: "0 0 4px 4px" }}
                 />
               )}
-
-              {/* Reps Input */}
-              <input
-                type="number"
-                value={set.reps ?? ""}
-                min="0"
-                onChange={(e) => {
-                  const v = e.target.value;
-                  onUpdateSet(
-                    index,
-                    setIdx,
-                    "reps",
-                    v === "" ? null : Math.max(0, parseInt(v))
-                  );
-                }}
-                onWheel={(e) => e.target.blur()}
-                disabled={isCompleted}
-                placeholder={lastSet?.reps ? String(lastSet.reps) : "—"}
-                className="h-9 px-2 border border-border bg-surface-raised text-text rounded-lg text-sm text-center placeholder:text-muted disabled:opacity-40 disabled:cursor-not-allowed"
-              />
-
-              {/* RIR Input */}
-              <input
-                type="number"
-                value={set.rir ?? ""}
-                min="0"
-                max="10"
-                onChange={(e) => {
-                  const v = e.target.value;
-                  onUpdateSet(
-                    index,
-                    setIdx,
-                    "rir",
-                    v === "" ? null : Math.max(0, parseInt(v))
-                  );
-                }}
-                onWheel={(e) => e.target.blur()}
-                disabled={isCompleted}
-                placeholder="—"
-                className="h-9 px-2 border border-border bg-surface-raised text-text rounded-lg text-sm text-center placeholder:text-muted disabled:opacity-40 disabled:cursor-not-allowed"
-              />
-
-              {/* Completion Checkbox */}
-              <button
-                onClick={() => {
-                  if (!isCompleted) {
-                    if (
-                      set.reps === null ||
-                      set.reps === undefined ||
-                      set.reps === ""
-                    ) {
-                      toast.error("Enter reps before completing this set.");
-                      return;
-                    }
-                    if (
-                      showWeight &&
-                      (set.weight === null ||
-                        set.weight === undefined ||
-                        set.weight === "")
-                    ) {
-                      toast.error("Enter weight before completing this set.");
-                      return;
-                    }
-                  }
-                  onToggleSetCompletion(index, setIdx, restSeconds);
-                }}
-                className="h-9 w-9 rounded-lg flex items-center justify-center transition-all"
-                style={
-                  isCompleted
-                    ? {
-                        background: "var(--color-accent)",
-                        border: "2px solid var(--color-accent)",
-                        color: "#fff",
-                        boxShadow: "0 0 8px var(--color-accent-60)",
-                      }
-                    : {
-                        border: "2px solid var(--color-border)",
-                        color: "var(--color-muted)",
-                      }
-                }
-              >
-                {isCompleted && "✓"}
-              </button>
             </div>
           );
         })}
-
         {/* Add Set Button */}
         <button
           onClick={() => onAddSet(index)}

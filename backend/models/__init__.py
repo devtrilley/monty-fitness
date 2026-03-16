@@ -31,6 +31,7 @@ class User(db.Model):
     current_weekly_streak = db.Column(db.Integer, default=0)
     last_workout_week = db.Column(db.String(10), nullable=True)
     display_name_preference = db.Column(db.String(20), default="username")
+    hide_rir = db.Column(db.Boolean, default=False)
 
     custom_exercises = db.relationship(
         "Exercise",
@@ -68,6 +69,7 @@ class User(db.Model):
             "is_admin": self.is_admin,
             "is_active": self.is_active,
             "display_name_preference": self.display_name_preference,
+            "hide_rir": self.hide_rir,
         }
 
 
@@ -368,6 +370,7 @@ class WorkoutSet(db.Model):
     weight = db.Column(db.Float, nullable=True)
     reps = db.Column(db.Integer, nullable=True)
     rir = db.Column(db.Integer, nullable=True)  # Reps in Reserve
+    notes = db.Column(db.Text, nullable=True)
     is_pr = db.Column(db.Boolean, default=False)
     pr_type = db.Column(db.String(20), nullable=True)  # 'weight', 'reps', 'volume'
     set_type = db.Column(db.String(20), default="normal")
@@ -382,6 +385,7 @@ class WorkoutSet(db.Model):
             "weight": self.weight,
             "reps": self.reps,
             "rir": self.rir,
+            "notes": self.notes,
             "is_pr": self.is_pr,
             "pr_type": self.pr_type,  # ADD THIS
             "set_type": self.set_type,

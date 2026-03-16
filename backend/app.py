@@ -340,6 +340,8 @@ def update_profile(user):
         "first_name",
     ):
         user.display_name_preference = data["display_name_preference"]
+    if "hide_rir" in data:
+        user.hide_rir = bool(data["hide_rir"])
     db.session.commit()
     return jsonify({"message": "Profile updated", "user": user.to_dict()}), 200
 
@@ -1252,8 +1254,8 @@ def finish_workout(user, session_id):
                     ws.reps = set_data.get("reps")
                     ws.rir = set_data.get("rir")
                     ws.set_type = set_data.get("set_type", "normal")
+                    ws.notes = set_data.get("notes")
                 else:
-                    # New set added to existing exercise
                     db.session.add(
                         WorkoutSet(
                             workout_exercise_id=workout_ex.id,
@@ -1262,6 +1264,7 @@ def finish_workout(user, session_id):
                             reps=set_data.get("reps"),
                             rir=set_data.get("rir"),
                             set_type=set_data.get("set_type", "normal"),
+                            notes=set_data.get("notes"),
                         )
                     )
         else:
@@ -1285,9 +1288,9 @@ def finish_workout(user, session_id):
                         reps=set_data.get("reps"),
                         rir=set_data.get("rir"),
                         set_type=set_data.get("set_type", "normal"),
+                        notes=set_data.get("notes"),
                     )
                 )
-
     # Delete existing exercises that had zero completed sets
     db.session.flush()
     for we_id, workout_ex in existing_exercises.items():
@@ -2061,6 +2064,21 @@ def admin_delete_user(user, target_id):
     db.session.delete(target)
     db.session.commit()
     return jsonify({"message": "User deleted"}), 200
+
+
+@app.route("/api/workouts/<int:workout_id>", methods=["PATCH"])
+@jwt_required_custom
+def patch_workout(user, workout_id):
+    workout = WorkoutSession.query.get(workout_id)
+    if not workout or workout.user_id != user.id:
+        return jsonify({"error": "Not found"}), 404
+    data = request.get_json() or {}
+    if "name" in data:
+        workout.name = data["name"].strip()
+    if "notes" in data:
+        workout.notes = data["notes"]
+    db.session.commit()
+    return jsonify({"message": "Workout updated", "workout": workout.to_dict()}), 200
 
 
 # ============================================

@@ -132,6 +132,7 @@ export default function SaveWorkoutPanel({ onBack }) {
           reps: set.reps ?? null,
           rir: set.rir ?? null,
           set_type: set.set_type || "normal",
+          notes: set.notes ?? null,
         });
       });
 
@@ -243,12 +244,50 @@ export default function SaveWorkoutPanel({ onBack }) {
               "polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px)",
           }}
         >
-          <p className="text-xs uppercase tracking-[0.2em] text-muted mb-3">
-            Workout Notes
-          </p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted">
+              Workout Notes
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                const lines = notes.split("\n");
+                const allBulleted = lines.every(
+                  (l) => l.startsWith("• ") || l === ""
+                );
+                if (allBulleted) {
+                  setNotes(lines.map((l) => l.replace(/^• /, "")).join("\n"));
+                } else {
+                  setNotes(
+                    lines
+                      .map((l) =>
+                        l.trim() ? (l.startsWith("• ") ? l : `• ${l}`) : l
+                      )
+                      .join("\n")
+                  );
+                }
+              }}
+              className="text-[10px] uppercase tracking-[0.12em] px-2 py-1"
+              style={{
+                fontFamily: "monospace",
+                color: "var(--color-accent)",
+                border: "1px solid var(--color-accent-30)",
+                background: "var(--color-accent-subtle)",
+                borderRadius: "4px",
+              }}
+            >
+              • Bulletize
+            </button>
+          </div>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && notes.includes("• ")) {
+                e.preventDefault();
+                setNotes((prev) => prev + "\n• ");
+              }
+            }}
             rows={5}
             placeholder="How did the workout go?"
             className="w-full px-3 py-3 bg-surface-raised border border-border rounded-lg text-text resize-none focus:outline-none focus:ring-2 focus:ring-accent"

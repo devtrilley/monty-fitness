@@ -71,6 +71,7 @@ export default function Profile() {
   const [displayNamePref, setDisplayNamePref] = useState(
     user?.display_name_preference || "username"
   );
+  const [hideRir, setHideRir] = useState(user?.hide_rir || false);
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [workouts, setWorkouts] = useState([]);
@@ -156,7 +157,8 @@ export default function Profile() {
         lastName,
         bio,
         user?.profile_photo_url,
-        displayNamePref
+        displayNamePref,
+        hideRir
       );
       setUser(updatedUser.user);
       toast.success("Profile updated.");
@@ -348,6 +350,37 @@ export default function Profile() {
             <p className="text-xs text-muted mt-1.5">
               This is how the app will refer to you.
             </p>
+          </div>
+          <div className="mt-4 mb-1 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted">Hide RiR column</p>
+              <p className="text-xs text-muted mt-0.5">
+                Remove Reps in Reserve from active workouts
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setHideRir(!hideRir)}
+              className="relative w-12 h-6 transition-all flex-shrink-0"
+              style={{
+                background: hideRir
+                  ? "var(--color-accent)"
+                  : "var(--color-surface-raised)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "12px",
+              }}
+            >
+              <span
+                className="absolute top-0.5 transition-all"
+                style={{
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "50%",
+                  background: hideRir ? "#000" : "var(--color-muted)",
+                  left: hideRir ? "calc(100% - 22px)" : "2px",
+                }}
+              />
+            </button>
           </div>
           <ChamferButton
             onClick={handleSave}

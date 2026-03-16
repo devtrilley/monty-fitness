@@ -18,7 +18,7 @@ import ViewRoutine from "./pages/ViewRoutine";
 import EditRoutine from "./pages/EditRoutine";
 import ActiveWorkout from "./pages/ActiveWorkout";
 import WorkoutDetails from "./pages/WorkoutDetails";
-import SaveWorkout from "./pages/SaveWorkout";
+
 import Analytics from "./pages/Analytics";
 import Challenges from "./pages/Challenges";
 import Admin from "./pages/Admin";
@@ -148,14 +148,6 @@ function AppRoutes() {
               element={
                 <ProtectedRoute>
                   <WorkoutDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/workouts/session/:sessionId/save"
-              element={
-                <ProtectedRoute>
-                  <SaveWorkout />
                 </ProtectedRoute>
               }
             />

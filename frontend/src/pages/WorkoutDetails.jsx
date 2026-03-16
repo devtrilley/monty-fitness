@@ -4,8 +4,10 @@ import {
   getPresignedUrl,
   uploadToS3,
   saveWorkoutPhoto,
+  updateWorkout,
 } from "../utils/api";
 import { useEffect, useState, useRef } from "react";
+import { Pencil, Check, X } from "lucide-react";
 import TopBar from "../components/TopBar";
 import ExerciseImage from "../components/ExerciseImage";
 import { toast } from "../components/TronToaster";
@@ -16,6 +18,10 @@ export default function WorkoutDetails() {
   const [workout, setWorkout] = useState(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
   const photoInputRef = useRef(null);
 
   const MAX_PHOTO_SIZE_MB = 5;
@@ -97,14 +103,84 @@ export default function WorkoutDetails() {
     <div className="min-h-screen bg-bg pb-20">
       <TopBar title="Workout Details" onBack={() => navigate(-1)} />
       <div className="px-4 py-6">
-        <h1 className="text-xl font-bold text-text mb-1">{workout.name}</h1>
+        <div className="flex items-start justify-between mb-1">
+          {editing ? (
+            <input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className="flex-1 text-xl font-bold bg-surface-raised border border-accent rounded px-2 py-1 text-text focus:outline-none mr-2"
+            />
+          ) : (
+            <h1 className="text-xl font-bold text-text">{workout.name}</h1>
+          )}
+          <div className="flex items-center gap-2 mt-1">
+            {editing ? (
+              <>
+                <button
+                  onClick={async () => {
+                    setEditSaving(true);
+                    try {
+                      const updated = await updateWorkout(workout.id, {
+                        name: editTitle.trim(),
+                        notes: editNotes,
+                      });
+                      setWorkout((prev) => ({
+                        ...prev,
+                        name: updated.workout.name,
+                        notes: updated.workout.notes,
+                      }));
+                      setEditing(false);
+                    } catch {
+                      toast.error("Failed to save changes.");
+                    } finally {
+                      setEditSaving(false);
+                    }
+                  }}
+                  disabled={editSaving}
+                  style={{ color: "var(--color-accent)" }}
+                >
+                  <Check size={18} />
+                </button>
+                <button
+                  onClick={() => setEditing(false)}
+                  style={{ color: "var(--color-muted)" }}
+                >
+                  <X size={18} />
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => {
+                  setEditTitle(workout.name);
+                  setEditNotes(workout.notes || "");
+                  setEditing(true);
+                }}
+                style={{ color: "var(--color-muted)" }}
+              >
+                <Pencil size={15} />
+              </button>
+            )}
+          </div>
+        </div>
         <p className="text-sm text-muted mb-6">
           {new Date(workout.session_date).toLocaleDateString()} &nbsp;·&nbsp;
           {workout.duration_minutes || 0} min &nbsp;·&nbsp;
           {workout.completed_sets || 0} sets
         </p>
-
-        {workout.notes && (
+        {editing ? (
+          <div className="mb-6">
+            <p className="text-xs uppercase tracking-[0.15em] text-muted mb-2">
+              Workout Notes
+            </p>
+            <textarea
+              value={editNotes}
+              onChange={(e) => setEditNotes(e.target.value)}
+              rows={4}
+              className="w-full px-3 py-2 bg-surface-raised border border-border rounded text-sm text-text resize-none focus:outline-none focus:border-accent"
+              placeholder="Add workout notes..."
+            />
+          </div>
+        ) : workout.notes ? (
           <div
             className="mb-6 p-4"
             style={{
@@ -121,7 +197,7 @@ export default function WorkoutDetails() {
               {workout.notes}
             </p>
           </div>
-        )}
+        ) : null}
 
         {/* Workout Photo */}
         <div className="mb-6">
@@ -236,19 +312,24 @@ export default function WorkoutDetails() {
                   name={ex.exercise?.name}
                 />
                 <button
-                className="text-left"
-                onClick={() => navigate(`/exercises/${ex.exercise_id}/history`)}
-              >
-                <h2 className="font-semibold text-text">
-                  {ex.exercise.name}
-                  <span className="text-xs font-normal text-muted ml-2">
-                    ({ex.exercise.equipment})
-                  </span>
-                </h2>
-                <p className="text-[10px] text-accent" style={{ fontFamily: "monospace", letterSpacing: "0.1em" }}>
-                  VIEW HISTORY →
-                </p>
-              </button>
+                  className="text-left"
+                  onClick={() =>
+                    navigate(`/exercises/${ex.exercise_id}/history`)
+                  }
+                >
+                  <h2 className="font-semibold text-text">
+                    {ex.exercise.name}
+                    <span className="text-xs font-normal text-muted ml-2">
+                      ({ex.exercise.equipment})
+                    </span>
+                  </h2>
+                  <p
+                    className="text-[10px] text-accent"
+                    style={{ fontFamily: "monospace", letterSpacing: "0.1em" }}
+                  >
+                    VIEW HISTORY →
+                  </p>
+                </button>
               </div>
               <div className="space-y-1">
                 {ex.sets.map((set, idx) => (
@@ -260,11 +341,18 @@ export default function WorkoutDetails() {
                       <span className="text-xs text-muted w-6 text-center">
                         {idx + 1}
                       </span>
-                      <p className="text-sm text-text">
-                        {ex.exercise?.equipment !== "Bodyweight"
-                          ? `${set.weight || 0} lbs × ${set.reps ?? "—"} reps`
-                          : `${set.reps ?? "—"} reps`}
-                      </p>
+                      <div>
+                        <p className="text-sm text-text">
+                          {ex.exercise?.equipment !== "Bodyweight"
+                            ? `${set.weight || 0} lbs × ${set.reps ?? "—"} reps`
+                            : `${set.reps ?? "—"} reps`}
+                        </p>
+                        {set.notes && (
+                          <p className="text-xs text-muted mt-0.5 italic">
+                            {set.notes}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     {set.is_pr && set.pr_type && (
                       <div className="flex items-center gap-1">

@@ -176,7 +176,11 @@ export default function ActiveWorkoutOverlay({ fromMini = false }) {
 
   const updateSet = (exerciseIndex, setIndex, field, value) => {
     const updated = { ...session };
-    updated.exercises[exerciseIndex].sets[setIndex][field] = value;
+    if (field === "exerciseNotes") {
+      updated.exercises[exerciseIndex].notes = value;
+    } else {
+      updated.exercises[exerciseIndex].sets[setIndex][field] = value;
+    }
     setSession(updated);
   };
 
@@ -658,6 +662,13 @@ export default function ActiveWorkoutOverlay({ fromMini = false }) {
               completedSets={completedSets}
               onToggleSetCompletion={toggleSetCompletion}
               onUpdateSet={updateSet}
+              onRemoveSet={(exIdx, setIdx) => {
+                const updated = { ...session };
+                updated.exercises[exIdx].sets = updated.exercises[
+                  exIdx
+                ].sets.filter((_, si) => si !== setIdx);
+                setSession(updated);
+              }}
               onAddSet={(idx) => {
                 const updated = { ...session };
                 const lastSet =
