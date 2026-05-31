@@ -1,5 +1,6 @@
 export const getSetLabel = (sets, currentIndex) => {
-  const currentSet = sets[currentIndex];
+  const currentSet = sets?.[currentIndex];
+  if (!currentSet) return currentIndex + 1;
   const setType = currentSet.set_type || currentSet.type || "normal";
 
   if (setType === "warmup") return "W";
@@ -16,5 +17,3 @@ export const getSetLabel = (sets, currentIndex) => {
   }
   return normalSetCount;
 };
-
-

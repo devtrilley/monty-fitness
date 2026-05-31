@@ -15,7 +15,14 @@ import {
 import toast from "react-hot-toast";
 import TopBar from "../components/TopBar";
 import ChamferButton from "../components/ChamferButton";
-import { FolderPlus, FilePlus2, Folder, CornerUpLeft } from "lucide-react";
+import {
+  FolderPlus,
+  FilePlus2,
+  Folder,
+  CornerUpLeft,
+  GripVertical,
+} from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 function WorkoutsSkeleton() {
   return (
@@ -52,21 +59,30 @@ export default function Workouts() {
   const [folders, setFolders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(null);
-  const [openFolders, setOpenFolders] = useState(() => {
+  const [closedFolders, setClosedFolders] = useState(() => {
     try {
-      return new Set(JSON.parse(localStorage.getItem("open_folders") || "[]"));
+      return new Set(
+        JSON.parse(localStorage.getItem("closed_folders") || "[]")
+      );
     } catch {
       return new Set();
     }
   });
-  const [myRoutinesCollapsed, setMyRoutinesCollapsed] = useState(
-    () => localStorage.getItem("my_routines_collapsed") !== "false"
-  );
+  const [myRoutinesCollapsed, setMyRoutinesCollapsed] = useState(true);
+  const [foldersInitialized, setFoldersInitialized] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [renamingFolderId, setRenamingFolderId] = useState(null);
   const [renameFolderName, setRenameFolderName] = useState("");
   const [movingRoutineId, setMovingRoutineId] = useState(null);
+  const [sectionOrder, setSectionOrder] = useState(() => {
+    try {
+      const stored = localStorage.getItem("section_order");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const navigate = useNavigate();
   const { openSession, isOpen, discard } = useWorkout();
   const [showActiveWarning, setShowActiveWarning] = useState(false);
@@ -85,6 +101,69 @@ export default function Workouts() {
   useEffect(() => {
     fetchAll();
   }, []);
+
+  useEffect(() => {
+    if (foldersInitialized) return;
+    if (folders.length === 0) {
+      setMyRoutinesCollapsed(false);
+      setFoldersInitialized(true);
+      return;
+    }
+
+    const currentFolderIds = folders.map((f) => String(f.id));
+
+    // Build a clean, validated section order
+    let order = sectionOrder
+      ? sectionOrder.filter(
+          (id) => id === "my_routines" || currentFolderIds.includes(id)
+        )
+      : null;
+
+    // Add any new folder IDs not yet in order (append before my_routines)
+    const missingIds = currentFolderIds.filter(
+      (id) => !order || !order.includes(id)
+    );
+    if (!order) {
+      order = [...currentFolderIds, "my_routines"];
+    } else if (missingIds.length > 0) {
+      const myRoutinesIdx = order.indexOf("my_routines");
+      order = [...order.slice(0, myRoutinesIdx), ...missingIds, "my_routines"];
+    }
+    // Ensure my_routines is always present
+    if (!order.includes("my_routines")) order.push("my_routines");
+
+    setSectionOrder(order);
+    localStorage.setItem("section_order", JSON.stringify(order));
+
+    // Only apply position-based defaults if user has never set their own prefs
+    const hasClosedFoldersPref =
+      localStorage.getItem("closed_folders") !== null;
+    const hasMyRoutinesPref =
+      localStorage.getItem("my_routines_collapsed") !== null;
+
+    if (!hasClosedFoldersPref) {
+      const firstId = order[0];
+      const toClose = new Set(
+        order
+          .slice(1)
+          .filter((id) => id !== "my_routines")
+          .map((id) => Number(id))
+      );
+      setClosedFolders(toClose);
+      localStorage.setItem("closed_folders", JSON.stringify([...toClose]));
+    }
+
+    if (!hasMyRoutinesPref) {
+      const firstId = order[0];
+      setMyRoutinesCollapsed(firstId !== "my_routines");
+    } else {
+      setMyRoutinesCollapsed(
+        localStorage.getItem("my_routines_collapsed") !== "false"
+      );
+    }
+
+    setFoldersInitialized(true);
+  }, [folders]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchAll = async () => {
     try {
@@ -234,17 +313,51 @@ export default function Workouts() {
   };
 
   const toggleFolder = (folderId) => {
-    setOpenFolders((prev) => {
+    setClosedFolders((prev) => {
       const next = new Set(prev);
       if (next.has(folderId)) next.delete(folderId);
       else next.add(folderId);
-      localStorage.setItem("open_folders", JSON.stringify([...next]));
+      localStorage.setItem("closed_folders", JSON.stringify([...next]));
       return next;
     });
   };
 
+  const handleSectionDragEnd = (result) => {
+    if (!result.destination) return;
+    const newOrder = Array.from(sectionOrder || []);
+    const [moved] = newOrder.splice(result.source.index, 1);
+    newOrder.splice(result.destination.index, 0, moved);
+    setSectionOrder(newOrder);
+    localStorage.setItem("section_order", JSON.stringify(newOrder));
+    // Open only the first section
+    const firstId = newOrder[0];
+    setMyRoutinesCollapsed(firstId !== "my_routines");
+    const toClose = new Set(
+      newOrder
+        .slice(1)
+        .filter((id) => id !== "my_routines")
+        .map((id) => Number(id))
+    );
+    setClosedFolders(toClose);
+    localStorage.setItem("closed_folders", JSON.stringify([...toClose]));
+  };
+
   const unfiledRoutines = routines.filter((r) => !r.folder_id);
   const movingRoutine = routines.find((r) => r.id === movingRoutineId);
+
+  // Compute valid display order synchronously — filters stale IDs so nothing disappears
+  const currentFolderIds = folders.map((f) => String(f.id));
+  const displayOrder = (() => {
+    if (!sectionOrder) return [...currentFolderIds, "my_routines"];
+    const valid = sectionOrder.filter(
+      (id) => id === "my_routines" || currentFolderIds.includes(id)
+    );
+    const missing = currentFolderIds.filter((id) => !valid.includes(id));
+    if (!valid.includes("my_routines")) valid.push("my_routines");
+    const myIdx = valid.indexOf("my_routines");
+    valid.splice(myIdx, 0, ...missing);
+    return valid;
+  })();
 
   if (loading) return <WorkoutsSkeleton />;
 
@@ -361,12 +474,18 @@ export default function Workouts() {
     </div>
   );
 
-  const FolderSection = ({ folder }) => {
+  const FolderSection = ({ folder, dragHandleProps }) => {
     const folderRoutines = routines.filter((r) => r.folder_id === folder.id);
-    const isCollapsed = !openFolders.has(folder.id);
+    const isCollapsed = closedFolders.has(folder.id);
     return (
       <div className="mb-2">
         <div className="flex items-center py-2 gap-2">
+          <div {...dragHandleProps} className="cursor-grab p-1">
+            <GripVertical
+              size={14}
+              style={{ color: "var(--color-border-bright)" }}
+            />
+          </div>
           <button
             onClick={() => toggleFolder(folder.id)}
             className="flex items-center gap-2 flex-1 text-left"
@@ -547,57 +666,128 @@ export default function Workouts() {
           </div>
         )}
 
-        {/* Folders */}
-        {folders.map((folder) => (
-          <FolderSection key={folder.id} folder={folder} />
-        ))}
-
-        {/* My Routines */}
-        <div className="mt-2">
-          <div className="flex items-center py-2 gap-2">
-            <button
-              onClick={() => {
-                const next = !myRoutinesCollapsed;
-                setMyRoutinesCollapsed(next);
-                localStorage.setItem("my_routines_collapsed", String(!next));
-              }}
-              className="flex items-center gap-2 flex-1 text-left"
-            >
-              <svg
-                className={`w-3 h-3 text-muted transition-transform flex-shrink-0 ${
-                  myRoutinesCollapsed ? "-rotate-90" : ""
-                }`}
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M7 10l5 5 5-5z" />
-              </svg>
-              <span className="font-semibold text-text">
-                My Routines{" "}
-                <span className="font-normal text-muted">
-                  ({unfiledRoutines.length})
-                </span>
-              </span>
-            </button>
-          </div>
-          {!myRoutinesCollapsed && (
-            <div className="space-y-3">
-              {unfiledRoutines.length === 0 ? (
-                <div className="border-2 border-dashed border-border rounded-xl py-6 text-center">
-                  <p className="text-sm text-muted">
-                    {routines.length === 0
-                      ? "No routines yet — create one above"
-                      : "All routines are in folders"}
-                  </p>
-                </div>
-              ) : (
-                unfiledRoutines.map((routine) => (
-                  <RoutineCard key={routine.id} routine={routine} />
-                ))
-              )}
-            </div>
-          )}
-        </div>
+        {/* Drag-and-drop section list */}
+        <DragDropContext onDragEnd={handleSectionDragEnd}>
+          <Droppable droppableId="sections">
+            {(provided) => (
+              <div {...provided.droppableProps} ref={provided.innerRef}>
+                {displayOrder.map((sectionId, idx) => {
+                  if (sectionId === "my_routines") {
+                    return (
+                      <Draggable
+                        key="my_routines"
+                        draggableId="my_routines"
+                        index={idx}
+                      >
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className="mt-2"
+                            style={{
+                              ...provided.draggableProps.style,
+                              opacity: snapshot.isDragging ? 0.85 : 1,
+                            }}
+                          >
+                            <div className="flex items-center py-2 gap-2">
+                              <div
+                                {...provided.dragHandleProps}
+                                className="cursor-grab p-1"
+                              >
+                                <GripVertical
+                                  size={14}
+                                  style={{
+                                    color: "var(--color-border-bright)",
+                                  }}
+                                />
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setMyRoutinesCollapsed((p) => {
+                                    localStorage.setItem(
+                                      "my_routines_collapsed",
+                                      String(!p)
+                                    );
+                                    return !p;
+                                  });
+                                }}
+                                className="flex items-center gap-2 flex-1 text-left"
+                              >
+                                <svg
+                                  className={`w-3 h-3 text-muted transition-transform flex-shrink-0 ${
+                                    myRoutinesCollapsed ? "-rotate-90" : ""
+                                  }`}
+                                  fill="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path d="M7 10l5 5 5-5z" />
+                                </svg>
+                                <span className="font-semibold text-text">
+                                  My Routines{" "}
+                                  <span className="font-normal text-muted">
+                                    ({unfiledRoutines.length})
+                                  </span>
+                                </span>
+                              </button>
+                            </div>
+                            {!myRoutinesCollapsed && (
+                              <div className="space-y-3">
+                                {unfiledRoutines.length === 0 ? (
+                                  <div className="border-2 border-dashed border-border rounded-xl py-6 text-center">
+                                    <p className="text-sm text-muted">
+                                      {routines.length === 0
+                                        ? "No routines yet — create one above"
+                                        : "All routines are in folders"}
+                                    </p>
+                                  </div>
+                                ) : (
+                                  unfiledRoutines.map((routine) => (
+                                    <RoutineCard
+                                      key={routine.id}
+                                      routine={routine}
+                                    />
+                                  ))
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </Draggable>
+                    );
+                  }
+                  const folder = folders.find(
+                    (f) => String(f.id) === sectionId
+                  );
+                  if (!folder) return null;
+                  return (
+                    <Draggable
+                      key={sectionId}
+                      draggableId={sectionId}
+                      index={idx}
+                    >
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          style={{
+                            ...provided.draggableProps.style,
+                            opacity: snapshot.isDragging ? 0.85 : 1,
+                          }}
+                        >
+                          <FolderSection
+                            folder={folder}
+                            dragHandleProps={provided.dragHandleProps}
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  );
+                })}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
       </div>
       {showActiveWarning && (
         <div
@@ -664,11 +854,13 @@ export default function Workouts() {
       {/* Move to Folder Bottom Sheet */}
       {movingRoutineId && (
         <div
-          className="fixed inset-0 z-50 flex items-end"
-          style={{ background: "rgba(0,0,0,0.85)" }}
+          className="fixed inset-0 flex items-end"
+          style={{ background: "rgba(0,0,0,0.85)", zIndex: 200 }}
+          onClick={() => setMovingRoutineId(null)}
         >
           <div
             className="w-full p-6 modal-slide-up"
+            onClick={(e) => e.stopPropagation()}
             style={{
               background: "var(--color-surface)",
               borderTop: "1px solid var(--color-border-bright)",

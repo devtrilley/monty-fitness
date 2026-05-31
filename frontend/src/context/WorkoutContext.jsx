@@ -17,11 +17,39 @@ export const WorkoutProvider = ({ children }) => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [completedSets, setCompletedSets] = useState(new Set());
   const [restTimers, setRestTimers] = useState({});
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(() => {
+    const hasSession = Object.keys(localStorage).some(
+      (k) =>
+        k.startsWith("active_workout_") &&
+        !k.includes("_completed_") &&
+        !k.includes("_elapsed_")
+    );
+    return hasSession && localStorage.getItem("workout_minimized") === "true";
+  });
   const [isPaused, setIsPaused] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const isOpen = !!sessionId;
+
+  // Persist minimized state
+  useEffect(() => {
+    localStorage.setItem("workout_minimized", String(isMinimized));
+  }, [isMinimized]);
+
+  // Restore session on cold browser reload
+  useEffect(() => {
+    const keys = Object.keys(localStorage);
+    const sessionKey = keys.find(
+      (k) =>
+        k.startsWith("active_workout_") &&
+        !k.includes("_completed_") &&
+        !k.includes("_elapsed_")
+    );
+    if (sessionKey) {
+      const id = sessionKey.replace("active_workout_", "");
+      openSession(id, { restore: true });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Live timer — stops when paused
   useEffect(() => {
@@ -58,11 +86,11 @@ export const WorkoutProvider = ({ children }) => {
     );
   }, [elapsedSeconds, sessionId]);
 
-  const openSession = async (newSessionId) => {
+  const openSession = async (newSessionId, { restore = false } = {}) => {
     const id = String(newSessionId);
     setSessionId(id);
     setLoading(true);
-    setIsMinimized(false);
+    if (!restore) setIsMinimized(false);
     setIsPaused(false);
     setRestTimers({});
 
@@ -120,6 +148,7 @@ export const WorkoutProvider = ({ children }) => {
       localStorage.removeItem(`active_workout_completed_${sessionId}`);
       localStorage.removeItem(`active_workout_elapsed_${sessionId}`);
     }
+    localStorage.removeItem("workout_minimized");
     setSessionId(null);
     setSession(null);
     setStartTime(null);
@@ -134,13 +163,17 @@ export const WorkoutProvider = ({ children }) => {
   const discard = async () => {
     try {
       await discardWorkout(sessionId);
-      clearSession();
-      toast.success("Workout discarded");
-      return true;
-    } catch {
-      toast.error("Failed to discard workout");
-      return false;
+    } catch (err) {
+      // 404 means session no longer exists in DB — treat as already discarded
+      const status = err?.response?.status;
+      if (status !== 404 && status !== 401 && status !== 403) {
+        toast.error("Failed to discard workout");
+        return false;
+      }
     }
+    clearSession();
+    toast.success("Workout discarded");
+    return true;
   };
 
   return (

@@ -203,6 +203,13 @@ function AppRoutes() {
 }
 
 function App() {
+  useEffect(() => {
+    const ping = () =>
+      fetch(`${import.meta.env.VITE_API_URL || ""}/api/health`).catch(() => {});
+    const id = setInterval(ping, 10 * 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <AuthProvider>
       <WorkoutProvider>

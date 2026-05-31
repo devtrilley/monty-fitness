@@ -69,6 +69,7 @@ export default function ExercisePicker({
   const [muscleOptions, setMuscleOptions] = useState([]);
   const [activeEquipment, setActiveEquipment] = useState(null);
   const [activeMuscle, setActiveMuscle] = useState(null);
+  const [recentPicks, setRecentPicks] = useState([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -77,6 +78,12 @@ export default function ExercisePicker({
       setSearchTerm("");
       setActiveEquipment(null);
       setActiveMuscle(null);
+      try {
+        const stored = localStorage.getItem("recent_exercise_picks");
+        setRecentPicks(stored ? JSON.parse(stored) : []);
+      } catch {
+        setRecentPicks([]);
+      }
       const fetchData = async () => {
         try {
           const [exData, filterData] = await Promise.all([
@@ -113,8 +120,20 @@ export default function ExercisePicker({
     );
   };
 
+  const saveRecentPick = (exercise) => {
+    try {
+      const stored = localStorage.getItem("recent_exercise_picks");
+      const existing = stored ? JSON.parse(stored) : [];
+      const filtered = existing.filter((e) => e.id !== exercise.id);
+      const updated = [exercise, ...filtered].slice(0, 5);
+      localStorage.setItem("recent_exercise_picks", JSON.stringify(updated));
+      setRecentPicks(updated);
+    } catch {}
+  };
+
   const handleConfirm = () => {
     if (selected.length === 0) return;
+    selected.forEach(saveRecentPick);
     onSelectExercises(selected);
     setSelected([]);
   };
@@ -211,6 +230,127 @@ export default function ExercisePicker({
             <p className="text-center text-muted py-8">Loading exercises...</p>
           ) : (
             <div className="space-y-2">
+              {/* Recent Picks */}
+              {!searchTerm &&
+                !activeEquipment &&
+                !activeMuscle &&
+                recentPicks.length > 0 && (
+                  <>
+                    <p
+                      className="text-[10px] uppercase tracking-[0.2em] mb-1 px-1"
+                      style={{
+                        color: "var(--color-accent)",
+                        fontFamily: "monospace",
+                      }}
+                    >
+                      Recent Picks
+                    </p>
+                    {recentPicks
+                      .filter((rp) => !alreadyAdded.includes(rp.id))
+                      .map((exercise) => {
+                        const isSelected = selected.find(
+                          (e) => e.id === exercise.id
+                        );
+                        return (
+                          <button
+                            key={`recent-${exercise.id}`}
+                            onClick={() => {
+                              if (multiSelect) toggleSelect(exercise);
+                              else {
+                                saveRecentPick(exercise);
+                                onSelectExercise(exercise);
+                              }
+                            }}
+                            className="w-full flex items-center justify-between p-3 text-left transition-all active:scale-[0.99]"
+                            style={
+                              isSelected
+                                ? {
+                                    background: "var(--color-accent-subtle)",
+                                    border: "1px solid var(--color-accent-35)",
+                                    clipPath:
+                                      "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+                                  }
+                                : {
+                                    background: "var(--color-surface)",
+                                    border: "1px solid var(--color-accent-30)",
+                                    clipPath:
+                                      "polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px)",
+                                  }
+                            }
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <ExerciseImage
+                                imageUrl={exercise.image_url}
+                                name={exercise.name}
+                              />
+                              <div className="min-w-0">
+                                <p className="font-medium text-text text-sm">
+                                  {exercise.name}{" "}
+                                  <span className="text-muted font-normal">
+                                    ({exercise.equipment})
+                                  </span>
+                                </p>
+                                {exercise.primary_muscle && (
+                                  <p className="text-xs text-muted mt-0.5">
+                                    {exercise.primary_muscle}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            {multiSelect ? (
+                              <div
+                                className="w-6 h-6 flex items-center justify-center flex-shrink-0"
+                                style={
+                                  isSelected
+                                    ? {
+                                        borderRadius: "3px",
+                                        background: "var(--color-accent)",
+                                        border: "2px solid var(--color-accent)",
+                                      }
+                                    : {
+                                        borderRadius: "3px",
+                                        border: "2px solid var(--color-border)",
+                                      }
+                                }
+                              >
+                                {isSelected && (
+                                  <svg
+                                    className="w-3 h-3"
+                                    fill="none"
+                                    viewBox="0 0 12 12"
+                                  >
+                                    <path
+                                      d="M2 6l3 3 5-5"
+                                      stroke="white"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-accent text-xl flex-shrink-0">
+                                +
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    <div
+                      style={{
+                        borderTop: "1px solid var(--color-border)",
+                        margin: "8px 0 4px",
+                      }}
+                    />
+                    <p
+                      className="text-[10px] uppercase tracking-[0.2em] mb-1 px-1 text-muted"
+                      style={{ fontFamily: "monospace" }}
+                    >
+                      All Exercises
+                    </p>
+                  </>
+                )}
               {filteredExercises.map((exercise) => {
                 const isAlreadyAdded = alreadyAdded.includes(exercise.id);
                 const isSelected = selected.find((e) => e.id === exercise.id);
@@ -222,6 +362,7 @@ export default function ExercisePicker({
                       if (multiSelect) {
                         toggleSelect(exercise);
                       } else {
+                        saveRecentPick(exercise);
                         onSelectExercise(exercise);
                       }
                     }}

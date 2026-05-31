@@ -17,7 +17,7 @@ export default function ActiveWorkout() {
     }
     openSession(sessionId);
     navigate(-1);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

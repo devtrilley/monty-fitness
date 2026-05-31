@@ -66,22 +66,59 @@ export default function ActiveExerciseCard({
   const [notesMode, setNotesMode] = useState("exercise"); // "exercise" | "set"
   const [swipedSetIdx, setSwipedSetIdx] = useState(null);
   const swipeStartX = useRef(null);
+  const rowRefs = useRef({});
   const showWeight = exercise.exercise?.equipment !== "Bodyweight";
   const hideRir = user?.hide_rir || false;
   const restSeconds = customRestSeconds || exercise.rest_seconds || 120;
 
   const handleSetTouchStart = (e, setIdx) => {
+    if (swipedSetIdx !== null && swipedSetIdx !== setIdx) {
+      const prevEl = rowRefs.current[swipedSetIdx];
+      if (prevEl) {
+        prevEl.style.transition = "transform 0.2s ease";
+        prevEl.style.transform = "translateX(0)";
+        setTimeout(() => {
+          if (prevEl) prevEl.style.transition = "";
+        }, 200);
+      }
+      setSwipedSetIdx(null);
+    }
     swipeStartX.current = e.touches[0].clientX;
+  };
+  const handleSetTouchMove = (e, setIdx) => {
+    if (swipeStartX.current === null) return;
+    const rawDiff = swipeStartX.current - e.touches[0].clientX;
+    const startOffset = swipedSetIdx === setIdx ? 80 : 0;
+    const total = Math.max(0, Math.min(startOffset + rawDiff, 80));
+    const el = rowRefs.current[setIdx];
+    if (el) el.style.transform = `translateX(-${total}px)`;
   };
   const handleSetTouchEnd = (e, setIdx) => {
     if (swipeStartX.current === null) return;
-    const diff = swipeStartX.current - e.changedTouches[0].clientX;
-    if (diff > 60) {
-      setSwipedSetIdx(setIdx);
-    } else if (diff < -20) {
-      setSwipedSetIdx(null);
-    }
+    const rawDiff = swipeStartX.current - e.changedTouches[0].clientX;
     swipeStartX.current = null;
+    const startOffset = swipedSetIdx === setIdx ? 80 : 0;
+    const total = startOffset + rawDiff;
+    const el = rowRefs.current[setIdx];
+    if (total > 40) {
+      setSwipedSetIdx(setIdx);
+      if (el) {
+        el.style.transition = "transform 0.2s ease";
+        el.style.transform = "translateX(-80px)";
+        setTimeout(() => {
+          if (el) el.style.transition = "";
+        }, 200);
+      }
+    } else {
+      setSwipedSetIdx(null);
+      if (el) {
+        el.style.transition = "transform 0.2s ease";
+        el.style.transform = "translateX(0)";
+        setTimeout(() => {
+          if (el) el.style.transition = "";
+        }, 200);
+      }
+    }
   };
 
   return (
@@ -241,186 +278,216 @@ export default function ActiveExerciseCard({
           const lastSet = exercise.last_performance?.[setIdx];
           const isSwiped = swipedSetIdx === setIdx;
           return (
-            <div key={set.id} className="relative overflow-hidden rounded-md">
-              {/* Swipe delete reveal */}
-              {isSwiped && onRemoveSet && !isCompleted && (
+            <div key={set.id} className="relative overflow-hidden rounded-sm">
+              {/* Delete button — stays fixed behind the sliding row */}
+              <div
+                className="absolute right-0 top-0 bottom-0 flex items-center justify-center px-4"
+                style={{ background: "var(--color-danger)", minWidth: "80px" }}
+              >
                 <button
                   onClick={() => {
                     setSwipedSetIdx(null);
-                    onRemoveSet(index, setIdx);
+                    if (rowRefs.current[setIdx])
+                      rowRefs.current[setIdx].style.transform = "translateX(0)";
+                    onRemoveSet && onRemoveSet(index, setIdx);
                   }}
-                  className="absolute right-0 top-0 bottom-0 flex items-center justify-center px-4 z-10"
+                  className="w-full h-full flex items-center justify-center"
                   style={{
-                    background: "var(--color-danger)",
                     color: "#fff",
-                    fontSize: "12px",
-                    fontWeight: 700,
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    fontFamily: "monospace",
+                    letterSpacing: "0.1em",
                   }}
                 >
-                  Delete
+                  DELETE
                 </button>
-              )}
+              </div>
+              {/* Sliding wrapper — row + notes move together */}
               <div
+                ref={(el) => {
+                  rowRefs.current[setIdx] = el;
+                }}
                 onTouchStart={(e) => handleSetTouchStart(e, setIdx)}
+                onTouchMove={(e) => handleSetTouchMove(e, setIdx)}
                 onTouchEnd={(e) => handleSetTouchEnd(e, setIdx)}
-                onClick={() => swipedSetIdx !== null && setSwipedSetIdx(null)}
-                className={`grid ${
-                  showWeight && !hideRir
-                    ? "grid-cols-[35px_64px_62px_62px_42px]"
-                    : showWeight && hideRir
-                    ? "grid-cols-[35px_64px_62px_42px]"
-                    : !hideRir
-                    ? "grid-cols-[35px_62px_62px_42px]"
-                    : "grid-cols-[35px_62px_42px]"
-                } gap-1.5 items-center -mx-4 px-4 py-1 transition-all`}
+                onClick={() => {
+                  if (swipedSetIdx !== null) {
+                    setSwipedSetIdx(null);
+                    if (rowRefs.current[setIdx])
+                      rowRefs.current[setIdx].style.transform = "translateX(0)";
+                  }
+                }}
                 style={{
-                  background: isCompleted
-                    ? "rgba(34,197,94,0.12)"
-                    : setIdx % 2 === 0
-                    ? "var(--color-surface-raised)"
-                    : "var(--color-surface)",
-                  borderLeft: isCompleted
-                    ? "2px solid var(--color-success)"
-                    : "none",
-                  transform: isSwiped ? "translateX(-80px)" : "translateX(0)",
-                  transition: "transform 0.2s ease",
+                  background: "var(--color-surface)",
+                  willChange: "transform",
                 }}
               >
-                {/* Set Type Button */}
-                <button
-                  onClick={() => onOpenSetTypeModal(index, setIdx)}
-                  disabled={isCompleted}
-                  className={`font-medium text-center h-9 w-9 rounded-lg transition-all ${
-                    isCompleted
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:opacity-80"
-                  }`}
-                  style={getSetStyle(set.set_type)}
-                >
-                  {getSetLabel(exercise.sets, setIdx)}
-                </button>
-
-                {/* Weight Input */}
-                {showWeight && (
-                  <input
-                    type="number"
-                    value={set.weight ?? ""}
-                    min="0"
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      onUpdateSet(
-                        index,
-                        setIdx,
-                        "weight",
-                        v === "" ? null : Math.max(0, parseFloat(v))
-                      );
-                    }}
-                    onWheel={(e) => e.target.blur()}
-                    disabled={isCompleted}
-                    placeholder={lastSet?.weight ? String(lastSet.weight) : "—"}
-                    className="h-9 px-1 border border-border bg-surface-raised text-text rounded-lg text-xs text-center placeholder:text-muted disabled:opacity-40 disabled:cursor-not-allowed"
-                  />
-                )}
-
-                {/* Reps Input */}
-                <input
-                  type="number"
-                  value={set.reps ?? ""}
-                  min="0"
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    onUpdateSet(
-                      index,
-                      setIdx,
-                      "reps",
-                      v === "" ? null : Math.max(0, parseInt(v))
-                    );
+                <div
+                  className={`grid ${
+                    showWeight && !hideRir
+                      ? "grid-cols-[35px_64px_62px_62px_42px]"
+                      : showWeight && hideRir
+                      ? "grid-cols-[35px_64px_62px_42px]"
+                      : !hideRir
+                      ? "grid-cols-[35px_62px_62px_42px]"
+                      : "grid-cols-[35px_62px_42px]"
+                  } gap-1.5 items-center -mx-4 px-4 py-1`}
+                  style={{
+                    background: isCompleted
+                      ? "rgba(0, 200, 255, 0.18)"
+                      : setIdx % 2 === 0
+                      ? "var(--color-surface-raised)"
+                      : "var(--color-surface)",
+                    borderLeft: isCompleted
+                      ? "3px solid #00c8ff"
+                      : "3px solid transparent",
+                    boxShadow: isCompleted
+                      ? "inset 0 0 20px rgba(0,200,255,0.15), inset 3px 0 8px rgba(0,200,255,0.2)"
+                      : "none",
                   }}
-                  onWheel={(e) => e.target.blur()}
-                  disabled={isCompleted}
-                  placeholder={lastSet?.reps ? String(lastSet.reps) : "—"}
-                  className="h-9 px-2 border border-border bg-surface-raised text-text rounded-lg text-sm text-center placeholder:text-muted disabled:opacity-40 disabled:cursor-not-allowed"
-                />
+                >
+                  {/* Set Type Button */}
+                  <button
+                    onClick={() => onOpenSetTypeModal(index, setIdx)}
+                    disabled={isCompleted}
+                    className={`font-medium text-center h-9 w-9 rounded-lg transition-all ${
+                      isCompleted
+                        ? "opacity-50 cursor-not-allowed"
+                        : "hover:opacity-80"
+                    }`}
+                    style={getSetStyle(set.set_type)}
+                  >
+                    {getSetLabel(exercise.sets, setIdx)}
+                  </button>
 
-                {/* RIR Input */}
-                {!hideRir && (
+                  {/* Weight Input */}
+                  {showWeight && (
+                    <input
+                      type="number"
+                      value={set.weight ?? ""}
+                      min="0"
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        onUpdateSet(
+                          index,
+                          setIdx,
+                          "weight",
+                          v === "" ? null : Math.max(0, parseFloat(v))
+                        );
+                      }}
+                      onWheel={(e) => e.target.blur()}
+                      disabled={isCompleted}
+                      placeholder={
+                        lastSet?.weight ? String(lastSet.weight) : "—"
+                      }
+                      className="h-9 px-1 border border-border bg-surface-raised text-text rounded-lg text-xs text-center placeholder:text-muted disabled:opacity-40 disabled:cursor-not-allowed"
+                    />
+                  )}
+
+                  {/* Reps Input */}
                   <input
                     type="number"
-                    value={set.rir ?? ""}
+                    value={set.reps ?? ""}
                     min="0"
-                    max="10"
                     onChange={(e) => {
                       const v = e.target.value;
                       onUpdateSet(
                         index,
                         setIdx,
-                        "rir",
+                        "reps",
                         v === "" ? null : Math.max(0, parseInt(v))
                       );
                     }}
                     onWheel={(e) => e.target.blur()}
                     disabled={isCompleted}
-                    placeholder="—"
+                    placeholder={lastSet?.reps ? String(lastSet.reps) : "—"}
                     className="h-9 px-2 border border-border bg-surface-raised text-text rounded-lg text-sm text-center placeholder:text-muted disabled:opacity-40 disabled:cursor-not-allowed"
                   />
-                )}
 
-                {/* Completion Checkbox */}
-                <button
-                  onClick={() => {
-                    if (!isCompleted) {
-                      if (
-                        set.reps === null ||
-                        set.reps === undefined ||
-                        set.reps === ""
-                      ) {
-                        toast.error("Enter reps before completing this set.");
-                        return;
+                  {/* RIR Input */}
+                  {!hideRir && (
+                    <input
+                      type="number"
+                      value={set.rir ?? ""}
+                      min="0"
+                      max="10"
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        onUpdateSet(
+                          index,
+                          setIdx,
+                          "rir",
+                          v === "" ? null : Math.max(0, parseInt(v))
+                        );
+                      }}
+                      onWheel={(e) => e.target.blur()}
+                      disabled={isCompleted}
+                      placeholder="—"
+                      className="h-9 px-2 border border-border bg-surface-raised text-text rounded-lg text-sm text-center placeholder:text-muted disabled:opacity-40 disabled:cursor-not-allowed"
+                    />
+                  )}
+
+                  {/* Completion Checkbox */}
+                  <button
+                    onClick={() => {
+                      if (!isCompleted) {
+                        if (
+                          set.reps === null ||
+                          set.reps === undefined ||
+                          set.reps === ""
+                        ) {
+                          toast.error("Enter reps before completing this set.");
+                          return;
+                        }
+                        if (
+                          showWeight &&
+                          (set.weight === null ||
+                            set.weight === undefined ||
+                            set.weight === "")
+                        ) {
+                          toast.error(
+                            "Enter weight before completing this set."
+                          );
+                          return;
+                        }
                       }
-                      if (
-                        showWeight &&
-                        (set.weight === null ||
-                          set.weight === undefined ||
-                          set.weight === "")
-                      ) {
-                        toast.error("Enter weight before completing this set.");
-                        return;
-                      }
+                      onToggleSetCompletion(index, setIdx, restSeconds);
+                    }}
+                    className="h-9 w-9 rounded-lg flex items-center justify-center transition-all"
+                    style={
+                      isCompleted
+                        ? {
+                            background: "var(--color-accent)",
+                            border: "2px solid var(--color-accent)",
+                            color: "#fff",
+                            boxShadow: "0 0 8px var(--color-accent-60)",
+                          }
+                        : {
+                            border: "2px solid var(--color-border)",
+                            color: "var(--color-muted)",
+                          }
                     }
-                    onToggleSetCompletion(index, setIdx, restSeconds);
-                  }}
-                  className="h-9 w-9 rounded-lg flex items-center justify-center transition-all"
-                  style={
-                    isCompleted
-                      ? {
-                          background: "var(--color-accent)",
-                          border: "2px solid var(--color-accent)",
-                          color: "#fff",
-                          boxShadow: "0 0 8px var(--color-accent-60)",
-                        }
-                      : {
-                          border: "2px solid var(--color-border)",
-                          color: "var(--color-muted)",
-                        }
-                  }
-                >
-                  {isCompleted && "✓"}
-                </button>
+                  >
+                    {isCompleted && "✓"}
+                  </button>
+                </div>
+                {/* Per-set notes */}
+                {notesMode === "set" && (
+                  <input
+                    type="text"
+                    value={set.notes || ""}
+                    onChange={(e) =>
+                      onUpdateSet(index, setIdx, "notes", e.target.value)
+                    }
+                    placeholder="Set note..."
+                    disabled={isCompleted}
+                    className="w-full text-xs text-text px-2 py-1 mt-0.5 border-t border-border bg-surface-raised focus:outline-none placeholder:text-muted"
+                    style={{ borderRadius: "0 0 4px 4px" }}
+                  />
+                )}
               </div>
-              {/* Per-set notes */}
-              {notesMode === "set" && (
-                <input
-                  type="text"
-                  value={set.notes || ""}
-                  onChange={(e) =>
-                    onUpdateSet(index, setIdx, "notes", e.target.value)
-                  }
-                  placeholder="Set note..."
-                  disabled={isCompleted}
-                  className="w-full text-xs text-text px-2 py-1 mt-0.5 border-t border-border bg-surface-raised focus:outline-none placeholder:text-muted"
-                  style={{ borderRadius: "0 0 4px 4px" }}
-                />
-              )}
+              {/* end sliding wrapper */}
             </div>
           );
         })}
