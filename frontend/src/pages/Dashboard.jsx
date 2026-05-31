@@ -5,6 +5,7 @@ import WorkoutHistoryCard from "../components/WorkoutHistoryCard";
 import { useNavigate, useLocation } from "react-router-dom";
 import TopBar from "../components/TopBar";
 import { BarChart3, BookOpen, Flame } from "lucide-react";
+import { toast } from "../components/TronToaster";
 
 function DashboardSkeleton() {
   return (
@@ -67,6 +68,7 @@ export default function Dashboard() {
         setSummary(summaryData);
       } catch (err) {
         console.error("Failed to load dashboard:", err);
+        toast.error("Failed to load dashboard data");
       } finally {
         setLoaded(true);
       }

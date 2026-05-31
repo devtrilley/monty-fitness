@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Flame, Calendar, Award, Trophy, Dumbbell } from "lucide-react";
+import { toast } from "../components/TronToaster";
 import VolumeChart from "../components/VolumeChart";
 import TopBar from "../components/TopBar";
 import {
@@ -84,6 +85,7 @@ export default function Analytics() {
       setPrs(prsData);
     } catch (error) {
       console.error("Failed to fetch analytics", error);
+      toast.error("Failed to load analytics");
     } finally {
       setLoading(false);
     }
